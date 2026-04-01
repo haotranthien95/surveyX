@@ -9,10 +9,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Foundation
 
-- [ ] **FOUN-01**: Project bootstrapped with Next.js 15 App Router, TypeScript, Tailwind CSS 4, shadcn/ui
-- [ ] **FOUN-02**: Vercel Blob StorageAdapter with ETag-based concurrent write protection and local fs fallback for dev
-- [ ] **FOUN-03**: CSV schema defined with explicit questionId columns and header-based read/write (not index-based)
-- [ ] **FOUN-04**: GPTW dimension constants mapping all 46 questions to dimensions and sub-pillars in lib/constants.ts
+- [x] **FOUN-01**: Project bootstrapped with Next.js 15 App Router, TypeScript, Tailwind CSS 4, shadcn/ui
+- [x] **FOUN-02**: Vercel Blob StorageAdapter with ETag-based concurrent write protection and local fs fallback for dev
+- [x] **FOUN-03**: CSV schema defined with explicit questionId columns and header-based read/write (not index-based)
+- [x] **FOUN-04**: GPTW dimension constants mapping all 46 questions to dimensions and sub-pillars in lib/constants.ts
 - [ ] **FOUN-05**: URL-based i18n routing with next-intl (/en/... and /my/...) with Noto Sans Myanmar font loaded via Fontsource
 - [ ] **FOUN-06**: English and Burmese translation message files (messages/en.json and messages/mm.json) with all UI strings
 
@@ -82,7 +82,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Data & Storage
 
 - [ ] **DATA-01**: All survey responses persisted to CSV files
-- [ ] **DATA-02**: CSV files stored via Vercel Blob in production with local filesystem fallback for development
+- [x] **DATA-02**: CSV files stored via Vercel Blob in production with local filesystem fallback for development
 - [ ] **DATA-03**: Survey configuration, tokens, SMTP settings, and responses each stored in separate CSV files
 - [ ] **DATA-04**: Anonymity threshold enforced — segment breakdowns hidden when response count < 5
 
@@ -131,10 +131,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUN-01 | Phase 1 | Pending |
-| FOUN-02 | Phase 1 | Pending |
-| FOUN-03 | Phase 1 | Pending |
-| FOUN-04 | Phase 1 | Pending |
+| FOUN-01 | Phase 1 | Complete |
+| FOUN-02 | Phase 1 | Complete |
+| FOUN-03 | Phase 1 | Complete |
+| FOUN-04 | Phase 1 | Complete |
 | FOUN-05 | Phase 1 | Pending |
 | FOUN-06 | Phase 1 | Pending |
 | AUTH-01 | Phase 1 | Pending |
@@ -183,7 +183,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UIUX-03 | Phase 1 | Pending |
 | UIUX-04 | Phase 1 | Pending |
 | DATA-01 | Phase 2 | Pending |
-| DATA-02 | Phase 1 | Pending |
+| DATA-02 | Phase 1 | Complete |
 | DATA-03 | Phase 2 | Pending |
 | DATA-04 | Phase 4 | Pending |
 
