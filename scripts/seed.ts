@@ -15,9 +15,9 @@ import { GPTW_QUESTIONS, OPEN_ENDED_QUESTIONS, DEMOGRAPHIC_FIELDS } from '../src
 // ---------------------------------------------------------------------------
 // DB setup (mirrors src/lib/db/index.ts but without module caching issues)
 // ---------------------------------------------------------------------------
-const connectionString = process.env.DATABASE_URL!;
+const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
 if (!connectionString) {
-  console.error('DATABASE_URL is not set');
+  console.error('POSTGRES_URL or DATABASE_URL is not set');
   process.exit(1);
 }
 const client = postgres(connectionString, { max: 5, idle_timeout: 20, connect_timeout: 10 });
