@@ -38,15 +38,17 @@ export function SMTPSettingsForm({ initialSettings }: Props) {
     setTestResult(null);
     setTestResultVisible(false);
     try {
-      const res = await fetch('/api/settings/smtp/test', { method: 'POST' });
+      // Send current form values (not DB values) so test uses what admin typed
+      const res = await fetch('/api/settings/smtp/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ host, port, username, password, fromAddress, fromName }),
+      });
       const data = await res.json() as { ok: boolean; error?: string };
       setTestResult(data);
       setTestResultVisible(true);
       if (data.ok) {
-        // Auto-hide success message after 5 seconds
-        setTimeout(() => {
-          setTestResultVisible(false);
-        }, 5000);
+        setTimeout(() => setTestResultVisible(false), 5000);
       }
     } catch {
       setTestResult({ ok: false, error: 'Network error' });
