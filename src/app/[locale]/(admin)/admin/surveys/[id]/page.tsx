@@ -45,7 +45,7 @@ export default async function SurveyDetailPage({
         href="../surveys"
         className="text-sm text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-1"
       >
-        ← Back to Surveys
+        ← {t('backToSurveys')}
       </Link>
 
       {/* Survey header */}
@@ -60,7 +60,7 @@ export default async function SurveyDetailPage({
         <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
           <span>{t('questionCount', { count: questions.length })}</span>
           <span>{t('responseCount', { count: responseCount })}</span>
-          <span>Created {new Date(survey.createdAt).toLocaleDateString()}</span>
+          <span>{new Date(survey.createdAt).toLocaleDateString()}</span>
         </div>
       </div>
 
@@ -70,7 +70,7 @@ export default async function SurveyDetailPage({
           href={`../surveys/${id}/invite`}
           className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
-          Send Invitations
+          {t('sendInvitations')}
         </Link>
       </div>
 
@@ -80,11 +80,11 @@ export default async function SurveyDetailPage({
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-3 py-2 text-left font-medium text-gray-600">{t('questionId')}</th>
-                <th className="px-3 py-2 text-left font-medium text-gray-600">{t('questionEnglish')}</th>
-                <th className="px-3 py-2 text-left font-medium text-gray-600">{t('questionBurmese')}</th>
-                <th className="px-3 py-2 text-left font-medium text-gray-600">{t('questionType')}</th>
-                <th className="px-3 py-2 text-left font-medium text-gray-600">{t('questionSection')}</th>
+                <th scope="col" className="px-3 py-2 text-left font-medium text-muted-foreground">{t('questionId')}</th>
+                <th scope="col" className="px-3 py-2 text-left font-medium text-muted-foreground">{t('questionEnglish')}</th>
+                <th scope="col" className="px-3 py-2 text-left font-medium text-muted-foreground">{t('questionBurmese')}</th>
+                <th scope="col" className="px-3 py-2 text-left font-medium text-muted-foreground">{t('questionType')}</th>
+                <th scope="col" className="px-3 py-2 text-left font-medium text-muted-foreground">{t('questionSection')}</th>
               </tr>
             </thead>
             <tbody>

@@ -1,5 +1,5 @@
 // src/app/layout.tsx
-import '@fontsource-variable/inter';
+import '@fontsource-variable/dm-sans';
 import '@fontsource-variable/noto-sans-myanmar';
 import './globals.css';
 

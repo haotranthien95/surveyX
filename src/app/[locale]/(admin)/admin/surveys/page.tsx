@@ -42,24 +42,20 @@ export default async function SurveysPage() {
 
       {/* Empty state */}
       {enriched.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <h2 className="text-lg font-semibold text-gray-700 mb-2">{t('emptyHeading')}</h2>
-          <p className="text-sm text-muted-foreground mb-6">{t('emptyBody')}</p>
-          <Link href="surveys/new" className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+        <div className="py-16">
+          <h2 className="text-base font-medium text-foreground mb-1">{t('emptyHeading')}</h2>
+          <p className="text-sm text-muted-foreground mb-4">{t('emptyBody')}</p>
+          <Link href="surveys/new" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 min-h-[44px]">
             {t('createFirstSurvey')}
           </Link>
         </div>
       ) : (
-        <div className="space-y-3">
+        <ul className="divide-y divide-border" role="list">
           {enriched.map(({ survey, questionCount, responseCount }) => (
-            <div
-              key={survey.id}
-              className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm"
-            >
-              {/* Survey name + meta */}
+            <li key={survey.id} className="flex items-center gap-4 py-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-sm text-gray-900 truncate">
+                  <span className="font-medium text-sm text-foreground truncate">
                     {survey.name}
                   </span>
                   <StatusBadge status={survey.status} t={t} />
@@ -70,17 +66,15 @@ export default async function SurveysPage() {
                   <span>{new Date(survey.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
-
-              {/* Actions */}
               <Link
                 href={`surveys/${survey.id}`}
-                className="inline-flex items-center justify-center rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="inline-flex items-center justify-center rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted min-h-[44px]"
               >
                 {t('viewButton')}
               </Link>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );

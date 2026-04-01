@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion, useMotionValue, useTransform, animate } from 'motion/react';
+import { useEffect, useRef } from 'react';
+import { useMotionValue, animate } from 'motion/react';
 
 interface CountUpProps {
   value: number;
@@ -10,26 +10,25 @@ interface CountUpProps {
   className?: string;
 }
 
-export function CountUp({ value, duration = 1.2, suffix = '%', className }: CountUpProps) {
-  const count = useMotionValue(0);
-  const rounded = useTransform(count, (v) => Math.round(v));
-  const [display, setDisplay] = useState(0);
+export function CountUp({ value, duration = 0.8, suffix = '%', className }: CountUpProps) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const motionValue = useMotionValue(0);
 
   useEffect(() => {
-    const controls = animate(count, value, {
+    const controls = animate(motionValue, value, {
       duration,
       ease: [0.16, 1, 0.3, 1],
     });
-    const unsubscribe = rounded.on('change', (v) => setDisplay(v));
+    const unsubscribe = motionValue.on('change', (v) => {
+      if (ref.current) {
+        ref.current.textContent = `${Math.round(v).toLocaleString()}${suffix}`;
+      }
+    });
     return () => {
       controls.stop();
       unsubscribe();
     };
-  }, [value, duration, count, rounded]);
+  }, [value, duration, suffix, motionValue]);
 
-  return (
-    <motion.span className={className}>
-      {display.toLocaleString()}{suffix}
-    </motion.span>
-  );
+  return <span ref={ref} className={className}>0{suffix}</span>;
 }

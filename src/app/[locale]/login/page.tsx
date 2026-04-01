@@ -41,115 +41,109 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Noise overlay */}
+    <main className="min-h-screen bg-white relative overflow-hidden">
       <div className="noise-overlay" />
-      {/* Subtle dot grid */}
-      <div className="absolute inset-0 bg-dots pointer-events-none" />
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-[360px] relative z-10"
-      >
-        {/* Brand — Optimus-style minimal text mark */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="mb-12"
-        >
-          <h1 className="text-3xl font-light text-gray-900 tracking-tight">
-            Surey<span className="font-semibold">Yoma</span>
-          </h1>
-          <p className="text-sm text-gray-400 mt-2">{t('subtitle')}</p>
-        </motion.div>
+      <div className="grid lg:grid-cols-2 min-h-screen">
+        {/* Left — brand panel */}
+        <div className="hidden lg:flex flex-col justify-between p-12 bg-[#fafafa] border-r border-border relative">
+          <div className="absolute inset-0 bg-dots pointer-events-none" />
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10"
+          >
+            <h1 className="text-3xl font-medium tracking-tight text-foreground leading-tight">
+              Employee Culture<br />Survey Platform
+            </h1>
+            <p className="text-sm text-muted-foreground mt-3 max-w-sm">
+              Measure what matters. Build trust across Credibility, Respect, Fairness, Pride, and Camaraderie.
+            </p>
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="text-[11px] text-muted-foreground/60 tracking-wider uppercase relative z-10"
+          >
+            Surey Yoma
+          </motion.p>
+        </div>
 
-        {/* Divider with dot */}
-        <div className="divider-dot mb-8" />
-
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <h2 className="text-base font-medium text-gray-900 mb-1">{t('heading')}</h2>
-          <p className="text-sm text-gray-400 mb-6">{t('description')}</p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="username" className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('username')}
-              </Label>
-              <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
-                required
-                disabled={loading}
-                className="h-11 bg-gray-50 border-gray-200 focus-visible:ring-gray-900/10 focus-visible:border-gray-400 rounded-lg"
-              />
+        {/* Right — form */}
+        <div className="flex items-center px-8 py-12 lg:px-16">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-sm"
+          >
+            <div className="mb-8">
+              <h2 className="text-lg font-medium text-foreground">{t('heading')}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{t('description')}</p>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('password')}
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                autoComplete="current-password"
-                required
-                disabled={loading}
-                className="h-11 bg-gray-50 border-gray-200 focus-visible:ring-gray-900/10 focus-visible:border-gray-400 rounded-lg"
-              />
-            </div>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="username" className="text-sm text-foreground">
+                  {t('username')}
+                </Label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="username"
+                  required
+                  disabled={loading}
+                  className="h-11"
+                />
+              </div>
 
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2.5"
-                role="alert"
-              >
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span>{error}</span>
-              </motion.div>
-            )}
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-sm text-foreground">
+                  {t('password')}
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  required
+                  disabled={loading}
+                  className="h-11"
+                />
+              </div>
 
-            <Button
-              type="submit"
-              className="w-full h-11 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg"
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {t('submitting')}
-                </span>
-              ) : (
-                t('submit')
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 rounded-md px-3 py-2.5"
+                  role="alert"
+                >
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{error}</span>
+                </motion.div>
               )}
-            </Button>
-          </form>
-        </motion.div>
 
-        {/* Footer */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-          className="text-center text-[11px] text-gray-300 mt-10 tracking-wide"
-        >
-          EMPLOYEE CULTURE SURVEY PLATFORM
-        </motion.p>
-      </motion.div>
-    </div>
+              <Button type="submit" className="w-full h-11" disabled={loading}>
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t('submitting')}
+                  </span>
+                ) : (
+                  t('submit')
+                )}
+              </Button>
+            </form>
+          </motion.div>
+        </div>
+      </div>
+    </main>
   );
 }

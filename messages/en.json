@@ -62,6 +62,8 @@
     "questionCount": "{count} questions",
     "responseCount": "{count} responses",
     "viewButton": "View",
+    "backToSurveys": "Back to Surveys",
+    "sendInvitations": "Send Invitations",
     "deleteButton": "Delete",
     "deleteConfirmHeading": "Delete this survey?",
     "deleteConfirmBody": "All associated questions and invitation links will be removed permanently.",

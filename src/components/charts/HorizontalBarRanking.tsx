@@ -1,7 +1,7 @@
 'use client';
 
-import { Bar } from 'react-chartjs-2';
-import type { ChartOptions } from 'chart.js';
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 
 interface RankingItem {
   label: string;
@@ -11,45 +11,30 @@ interface RankingItem {
 interface HorizontalBarRankingProps {
   items: RankingItem[];
   color?: string;
-  title?: string;
 }
 
-export function HorizontalBarRanking({ items, color = '#2563eb', title }: HorizontalBarRankingProps) {
-  const chartData = {
-    labels: items.map((item) => item.label.length > 50 ? item.label.slice(0, 47) + '...' : item.label),
-    datasets: [
-      {
-        data: items.map((item) => item.score),
-        backgroundColor: color,
-        borderRadius: 4,
-        barThickness: 20,
-      },
-    ],
-  };
+const chartConfig = {
+  score: { label: 'Score' },
+} satisfies ChartConfig;
 
-  const options: ChartOptions<'bar'> = {
-    indexAxis: 'y',
-    scales: {
-      x: {
-        beginAtZero: true,
-        max: 100,
-        ticks: { callback: (v) => `${v}%` },
-        grid: { color: '#f3f4f6' },
-      },
-      y: {
-        grid: { display: false },
-        ticks: { font: { size: 11 } },
-      },
-    },
-    plugins: {
-      title: title ? { display: true, text: title, align: 'start', font: { size: 14, weight: 600 } } : undefined,
-      tooltip: {
-        callbacks: {
-          label: (ctx) => `${ctx.parsed.x}% favorable`,
-        },
-      },
-    },
-  };
+export function HorizontalBarRanking({ items, color = 'hsl(var(--foreground))' }: HorizontalBarRankingProps) {
+  const data = items.map((item) => ({
+    name: item.label.length > 45 ? item.label.slice(0, 42) + '...' : item.label,
+    score: item.score,
+    fill: color,
+  }));
 
-  return <Bar data={chartData} options={options} />;
+  return (
+    <div role="img" aria-label={`Ranking: ${items.map(i => `${i.label} ${i.score}%`).join(', ')}`}>
+      <ChartContainer config={chartConfig} className="h-[400px] w-full">
+        <BarChart data={data} layout="vertical" accessibilityLayer margin={{ left: 8, right: 16 }}>
+          <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis type="number" tickLine={false} axisLine={false} fontSize={11} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
+          <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} fontSize={11} width={180} />
+          <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${value}% favorable`} />} />
+          <Bar dataKey="score" radius={[0, 4, 4, 0]} barSize={16} />
+        </BarChart>
+      </ChartContainer>
+    </div>
+  );
 }

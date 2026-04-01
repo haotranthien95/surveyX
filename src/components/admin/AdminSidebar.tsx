@@ -83,7 +83,7 @@ export function AdminSidebar() {
                   <motion.div
                     layoutId="activeNav"
                     className="absolute inset-0 bg-gray-50 rounded-md"
-                    transition={{ type: 'spring', duration: 0.35, bounce: 0.15 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                     style={{ zIndex: -1 }}
                   />
                 )}
@@ -115,7 +115,7 @@ export function AdminSidebar() {
     <>
       {/* Mobile hamburger */}
       <button
-        className="md:hidden fixed top-3 left-3 z-50 p-2 bg-white rounded-md shadow-sm border border-gray-200/60"
+        className="md:hidden fixed top-3 left-3 z-50 p-3 bg-white rounded-md shadow-sm border border-border min-w-[44px] min-h-[44px] flex items-center justify-center"
         onClick={() => setMobileOpen(true)}
         aria-label={t('toggleMenu')}
       >
@@ -131,7 +131,7 @@ export function AdminSidebar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"
+              className="absolute inset-0 bg-black/20"
               onClick={() => setMobileOpen(false)}
             />
             <motion.div

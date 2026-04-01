@@ -1,56 +1,39 @@
 'use client';
 
-import { Bar } from 'react-chartjs-2';
-import type { ChartOptions } from 'chart.js';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
+import { DIMENSION_COLORS, type DimensionName } from '@/lib/chart-colors';
 
-// GPTW dimension colors (color-blind accessible)
-const DIMENSION_COLORS = {
-  Credibility: '#2563eb',  // blue-600
-  Respect: '#7c3aed',     // violet-600
-  Fairness: '#0891b2',    // cyan-600
-  Pride: '#ea580c',       // orange-600
-  Camaraderie: '#16a34a', // green-600
-};
+const chartConfig = {
+  score: { label: 'Favorable' },
+  Credibility: { label: 'Credibility', color: DIMENSION_COLORS.Credibility },
+  Respect: { label: 'Respect', color: DIMENSION_COLORS.Respect },
+  Fairness: { label: 'Fairness', color: DIMENSION_COLORS.Fairness },
+  Pride: { label: 'Pride', color: DIMENSION_COLORS.Pride },
+  Camaraderie: { label: 'Camaraderie', color: DIMENSION_COLORS.Camaraderie },
+} satisfies ChartConfig;
 
 interface DimensionBarChartProps {
   data: { dimension: string; score: number }[];
 }
 
 export function DimensionBarChart({ data }: DimensionBarChartProps) {
-  const chartData = {
-    labels: data.map((d) => d.dimension),
-    datasets: [
-      {
-        data: data.map((d) => d.score),
-        backgroundColor: data.map(
-          (d) => DIMENSION_COLORS[d.dimension as keyof typeof DIMENSION_COLORS] || '#2563eb'
-        ),
-        borderRadius: 6,
-        barThickness: 40,
-      },
-    ],
-  };
+  const chartData = data.map((d) => ({
+    ...d,
+    fill: DIMENSION_COLORS[d.dimension as DimensionName] || DIMENSION_COLORS.Credibility,
+  }));
 
-  const options: ChartOptions<'bar'> = {
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 100,
-        ticks: { callback: (v) => `${v}%` },
-        grid: { color: '#f3f4f6' },
-      },
-      x: {
-        grid: { display: false },
-      },
-    },
-    plugins: {
-      tooltip: {
-        callbacks: {
-          label: (ctx) => `${ctx.parsed.y}% favorable`,
-        },
-      },
-    },
-  };
-
-  return <Bar data={chartData} options={options} />;
+  return (
+    <div role="img" aria-label={`Bar chart: ${data.map(d => `${d.dimension} ${d.score}%`).join(', ')}`}>
+      <ChartContainer config={chartConfig} className="h-[280px] w-full">
+        <BarChart data={chartData} accessibilityLayer>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis dataKey="dimension" tickLine={false} axisLine={false} fontSize={12} />
+          <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
+          <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${value}% favorable`} />} />
+          <Bar dataKey="score" radius={[6, 6, 0, 0]} />
+        </BarChart>
+      </ChartContainer>
+    </div>
+  );
 }
