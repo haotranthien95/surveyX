@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ManualQuestionEditor } from '@/components/admin/ManualQuestionEditor';
+import { useUpdateSurvey, useDeleteSurvey } from '@/hooks/use-surveys';
 import type { Survey, Question } from '@/lib/types';
 
 interface SurveyDetailClientProps {
@@ -41,45 +42,29 @@ export function SurveyDetailClient({ survey: initialSurvey, questions: initialQu
   const [editingQuestions, setEditingQuestions] = useState(false);
   const [editName, setEditName] = useState(survey.name);
   const [editDesc, setEditDesc] = useState(survey.description || '');
-  const [saving, setSaving] = useState(false);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const updateMutation = useUpdateSurvey();
+  const deleteMutation = useDeleteSurvey();
 
   async function saveHeader() {
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/surveys/${survey.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editName, description: editDesc }),
-      });
-      if (res.ok) {
-        const { survey: updated } = await res.json();
-        setSurvey(updated);
-        setEditingHeader(false);
-      }
-    } finally {
-      setSaving(false);
-    }
+    const updated = await updateMutation.mutateAsync({
+      id: survey.id,
+      name: editName,
+      description: editDesc,
+    });
+    setSurvey(updated);
+    setEditingHeader(false);
   }
 
   async function updateStatus(status: 'draft' | 'active' | 'closed') {
-    const res = await fetch(`/api/surveys/${survey.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    if (res.ok) {
-      const { survey: updated } = await res.json();
-      setSurvey(updated);
-    }
+    const updated = await updateMutation.mutateAsync({ id: survey.id, status });
+    setSurvey(updated);
     setShowStatusMenu(false);
   }
 
   async function handleDelete() {
     if (!confirm('Delete this survey and all its questions, tokens, and responses? This cannot be undone.')) return;
-    setDeleting(true);
-    await fetch(`/api/surveys/${survey.id}`, { method: 'DELETE' });
+    await deleteMutation.mutateAsync(survey.id);
     router.push(`/${locale}/admin/surveys`);
   }
 
@@ -127,9 +112,9 @@ export function SurveyDetailClient({ survey: initialSurvey, questions: initialQu
               className="text-sm"
             />
             <div className="flex gap-2">
-              <Button size="sm" onClick={saveHeader} disabled={saving || !editName.trim()}>
+              <Button size="sm" onClick={saveHeader} disabled={updateMutation.isPending || !editName.trim()}>
                 <Check className="w-3.5 h-3.5 mr-1" />
-                {saving ? 'Saving...' : 'Save'}
+                {updateMutation.isPending ? 'Saving...' : 'Save'}
               </Button>
               <Button size="sm" variant="outline" onClick={() => {
                 setEditingHeader(false);
@@ -221,10 +206,10 @@ export function SurveyDetailClient({ survey: initialSurvey, questions: initialQu
         <button
           type="button"
           onClick={handleDelete}
-          disabled={deleting}
+          disabled={deleteMutation.isPending}
           className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 min-h-[40px]"
         >
-          <Trash2 className="w-4 h-4" /> {deleting ? 'Deleting...' : 'Delete'}
+          <Trash2 className="w-4 h-4" /> {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
         </button>
       </div>
 

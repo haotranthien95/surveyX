@@ -1,10 +1,8 @@
 // src/app/[locale]/(admin)/admin/page.tsx
 import { getTranslations } from 'next-intl/server';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle2, Circle } from 'lucide-react';
-import { listSurveys } from '@/lib/services/survey.service';
+import { CheckCircle2 } from 'lucide-react';
+import { cachedListSurveys, cachedComputeAnalytics } from '@/lib/cache';
 import { DashboardCharts } from '@/components/dashboard/DashboardCharts';
-import { computeAnalytics } from '@/lib/services/analytics.service';
 import { SurveySelector } from '@/components/dashboard/SurveySelector';
 
 export default async function AdminDashboardPage({
@@ -12,12 +10,13 @@ export default async function AdminDashboardPage({
 }: {
   searchParams: Promise<{ survey?: string }>;
 }) {
-  const t = await getTranslations('dashboard');
-  const { survey: surveyId } = await searchParams;
+  const [t, { survey: surveyId }] = await Promise.all([
+    getTranslations('dashboard'),
+    searchParams,
+  ]);
 
-  const surveys = await listSurveys();
+  const surveys = await cachedListSurveys();
 
-  // Show onboarding checklist when no surveys exist yet
   if (surveys.length === 0) {
     const checklist = [
       { label: t('step1'), done: false },
@@ -55,12 +54,11 @@ export default async function AdminDashboardPage({
     );
   }
 
-  // Surveys exist — determine which one is active
   const activeSurveyId = surveyId ?? surveys[0]?.id;
 
-  // Compute real analytics for the selected survey (null when no responses)
+  // Cached analytics — heavy computation cached for 60s
   const analyticsData = activeSurveyId
-    ? await computeAnalytics(activeSurveyId)
+    ? await cachedComputeAnalytics(activeSurveyId)
     : null;
 
   return (

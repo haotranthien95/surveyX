@@ -3,6 +3,7 @@
 import { validateToken, markTokenUsed } from '@/lib/services/token.service';
 import { getQuestions } from '@/lib/services/survey.service';
 import { db, schema } from '@/lib/db';
+import { revalidateAnalytics, revalidateTokens } from '@/lib/revalidate';
 
 export async function POST(
   request: Request,
@@ -51,5 +52,7 @@ export async function POST(
   });
   await markTokenUsed(body.token, surveyId);
 
+  revalidateAnalytics(surveyId);
+  revalidateTokens(surveyId);
   return Response.json({ success: true });
 }

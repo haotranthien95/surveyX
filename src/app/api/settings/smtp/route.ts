@@ -4,6 +4,7 @@ import { getIronSession } from 'iron-session';
 import { sessionOptions } from '@/lib/auth';
 import type { SessionData } from '@/lib/auth';
 import { getSmtpSettings, saveSmtpSettings } from '@/lib/services/smtp.service';
+import { revalidateSmtp } from '@/lib/revalidate';
 import type { SmtpSettings } from '@/lib/types';
 
 async function isAuthenticated(): Promise<boolean> {
@@ -75,5 +76,6 @@ export async function PUT(request: Request) {
     fromName,
   });
 
+  revalidateSmtp();
   return Response.json({ ok: true });
 }

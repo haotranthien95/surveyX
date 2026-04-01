@@ -4,6 +4,7 @@ import { getIronSession } from 'iron-session';
 import { sessionOptions } from '@/lib/auth';
 import type { SessionData } from '@/lib/auth';
 import { createSurvey, listSurveys } from '@/lib/services/survey.service';
+import { revalidateSurveys } from '@/lib/revalidate';
 
 async function isAuthenticated(): Promise<boolean> {
   const cookieStore = await cookies();
@@ -33,5 +34,6 @@ export async function POST(request: Request) {
   }
 
   const survey = await createSurvey(name.trim(), description);
+  revalidateSurveys();
   return Response.json({ survey }, { status: 201 });
 }

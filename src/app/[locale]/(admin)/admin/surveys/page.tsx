@@ -1,7 +1,7 @@
 // src/app/[locale]/(admin)/admin/surveys/page.tsx
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { listSurveys, getResponseCount, getQuestions } from '@/lib/services/survey.service';
+import { cachedListSurveys, cachedGetResponseCount, cachedGetQuestions } from '@/lib/cache';
 import { Badge } from '@/components/ui/badge';
 import type { Survey } from '@/lib/types';
 
@@ -17,14 +17,14 @@ function StatusBadge({ status, t }: { status: Survey['status']; t: (key: string)
 
 export default async function SurveysPage() {
   const t = await getTranslations('surveys');
-  const surveys = await listSurveys();
+  const surveys = await cachedListSurveys();
 
-  // Fetch question and response counts for each survey in parallel
+  // Fetch question and response counts in parallel (cached)
   const enriched = await Promise.all(
     surveys.map(async (survey) => {
       const [questions, responseCount] = await Promise.all([
-        getQuestions(survey.id),
-        getResponseCount(survey.id),
+        cachedGetQuestions(survey.id),
+        cachedGetResponseCount(survey.id),
       ]);
       return { survey, questionCount: questions.length, responseCount };
     })

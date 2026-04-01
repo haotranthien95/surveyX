@@ -6,6 +6,7 @@ import type { SessionData } from '@/lib/auth';
 import { getSurvey } from '@/lib/services/survey.service';
 import { db, schema } from '@/lib/db';
 import { eq } from 'drizzle-orm';
+import { revalidateSurvey, revalidateSurveys } from '@/lib/revalidate';
 
 async function isAuthenticated(): Promise<boolean> {
   const cookieStore = await cookies();
@@ -63,6 +64,7 @@ export async function PATCH(
 
   if (!updated) return Response.json({ error: 'Not found' }, { status: 404 });
 
+  revalidateSurvey(id);
   return Response.json({
     survey: {
       id: updated.id,
@@ -84,5 +86,6 @@ export async function DELETE(
 
   const { id } = await params;
   await db.delete(schema.surveys).where(eq(schema.surveys.id, id));
+  revalidateSurveys();
   return Response.json({ success: true });
 }
