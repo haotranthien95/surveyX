@@ -52,25 +52,27 @@ export default async function SurveysPage() {
       ) : (
         <ul className="divide-y divide-border" role="list">
           {enriched.map(({ survey, questionCount, responseCount }) => (
-            <li key={survey.id} className="flex items-center gap-4 py-4">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-sm text-foreground truncate">
-                    {survey.name}
-                  </span>
-                  <StatusBadge status={survey.status} t={t} />
-                </div>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>{t('questionCount', { count: questionCount })}</span>
-                  <span>{t('responseCount', { count: responseCount })}</span>
-                  <span>{new Date(survey.createdAt).toLocaleDateString()}</span>
-                </div>
-              </div>
+            <li key={survey.id}>
               <Link
                 href={`surveys/${survey.id}`}
-                className="inline-flex items-center justify-center rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted min-h-[44px]"
+                className="flex items-center gap-4 py-4 -mx-2 px-2 rounded-lg hover:bg-muted/30 transition-colors group"
               >
-                {t('viewButton')}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-sm text-foreground truncate group-hover:text-foreground/80">
+                      {survey.name}
+                    </span>
+                    <StatusBadge status={survey.status} t={t} />
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span>{t('questionCount', { count: questionCount })}</span>
+                    <span>{t('responseCount', { count: responseCount })}</span>
+                    <span>{new Date(survey.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+                <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                  {t('viewButton')} →
+                </span>
               </Link>
             </li>
           ))}
