@@ -6,6 +6,7 @@ import type { SessionData } from '@/lib/auth';
 import { parseExcelBuffer } from '@/lib/services/excel.service';
 import { parseCSVBuffer } from '@/lib/services/csv-import.service';
 import { saveQuestions, getQuestions } from '@/lib/services/survey.service';
+import { revalidateSurvey } from '@/lib/revalidate';
 import { GPTW_QUESTIONS, OPEN_ENDED_QUESTIONS, DEMOGRAPHIC_FIELDS } from '@/lib/constants';
 import type { Question } from '@/lib/types';
 
@@ -46,6 +47,7 @@ export async function POST(
     if (body.useDefaults === true) {
       const allQuestions: Question[] = [...GPTW_QUESTIONS, ...OPEN_ENDED_QUESTIONS, ...DEMOGRAPHIC_FIELDS];
       await saveQuestions(id, allQuestions);
+      revalidateSurvey(id);
       return Response.json({ questions: allQuestions, count: allQuestions.length });
     }
 
@@ -53,6 +55,7 @@ export async function POST(
     if (Array.isArray(body.questions)) {
       const questions = body.questions as Question[];
       await saveQuestions(id, questions);
+      revalidateSurvey(id);
       return Response.json({ questions, count: questions.length });
     }
 
@@ -89,5 +92,6 @@ export async function POST(
   }
 
   await saveQuestions(id, questions);
+  revalidateSurvey(id);
   return Response.json({ questions, count: questions.length });
 }

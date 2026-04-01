@@ -7,6 +7,7 @@ import { getSurvey } from '@/lib/services/survey.service';
 import { getSmtpSettings } from '@/lib/services/smtp.service';
 import { createTransporter, sendInvitation } from '@/lib/services/email.service';
 import { generateToken } from '@/lib/services/token.service';
+import { revalidateTokens } from '@/lib/revalidate';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -113,5 +114,6 @@ export async function POST(
     }
   }
 
+  revalidateTokens(surveyId);
   return Response.json({ results, successCount, failCount });
 }
