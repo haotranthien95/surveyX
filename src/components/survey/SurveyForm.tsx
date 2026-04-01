@@ -187,9 +187,9 @@ export function SurveyForm({ survey, questions, tokenRow, locale }: SurveyFormPr
       />
 
       <div className="max-w-screen-xl mx-auto px-4 py-8">
-        <div className="flex flex-row gap-8">
+        <div className="flex flex-row gap-10">
           {/* Desktop TOC sidebar */}
-          <div className="hidden lg:block w-60 flex-shrink-0">
+          <div className="hidden lg:block w-56 flex-shrink-0">
             <TableOfContents
               sections={tocSections}
               totalProgress={totalProgress}
@@ -199,44 +199,40 @@ export function SurveyForm({ survey, questions, tokenRow, locale }: SurveyFormPr
           {/* Form content */}
           <div className="flex-1 max-w-2xl">
             {/* Form header */}
-            <div className="flex items-start justify-between mb-6 gap-4">
-              <div>
-                <h1 className="text-2xl font-semibold text-gray-900">{survey.name}</h1>
-                {survey.description && (
-                  <p className="text-sm text-gray-500 mt-1">{survey.description}</p>
-                )}
+            <div className="mb-10">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <h1 className="text-xl font-medium text-foreground">{survey.name}</h1>
+                  {survey.description && (
+                    <p className="text-sm text-muted-foreground mt-1">{survey.description}</p>
+                  )}
+                </div>
+
+                {/* Language switcher — pill style */}
+                <div className="flex items-center bg-muted/40 rounded-full p-0.5 flex-shrink-0">
+                  {(['en', 'my'] as const).map(lang => (
+                    <button
+                      key={lang}
+                      type="button"
+                      onClick={() => setDisplayLocale(lang)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 ${
+                        displayLocale === lang
+                          ? 'bg-foreground text-background shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {lang.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Language switcher */}
-              <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden h-9 flex-shrink-0">
-                {(['en', 'my'] as const).map(lang => (
-                  <button
-                    key={lang}
-                    type="button"
-                    onClick={() => setDisplayLocale(lang)}
-                    className={`px-3 py-1 text-sm font-medium transition-colors ${
-                      displayLocale === lang
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    {lang.toUpperCase()}
-                  </button>
-                ))}
+              {/* Email — subtle inline, not a form field */}
+              <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
+                <span>Responding as</span>
+                <span className="text-foreground/50">{tokenRow.email}</span>
               </div>
-            </div>
-
-            {/* Readonly email field */}
-            <div className="mb-6">
-              <label className="text-sm font-medium text-gray-700 block mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                readOnly
-                value={tokenRow.email}
-                className="block w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 cursor-not-allowed"
-              />
+              <div className="divider-dot mt-6" />
             </div>
 
             {/* Sections */}
@@ -251,31 +247,31 @@ export function SurveyForm({ survey, questions, tokenRow, locale }: SurveyFormPr
               >
                 {/* Optional name + department for demographics section (FORM-12) */}
                 {sectionKey === 'demographic' && (
-                  <div className="space-y-4 mb-6">
-                    <p className="text-xs text-gray-400">
+                  <div className="py-4 space-y-5">
+                    <p className="text-xs text-muted-foreground/60">
                       Your demographic information helps us analyze results by group. Individual responses remain anonymous.
                     </p>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Name (Optional)
+                      <label className="text-[13px] text-muted-foreground block mb-1.5">
+                        Name <span className="text-muted-foreground/40">(Optional)</span>
                       </label>
                       <input
                         type="text"
                         value={answers['__name__'] ?? ''}
                         onChange={e => handleAnswer('__name__', e.target.value)}
-                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="block w-full rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-foreground/20"
                         placeholder="Your name"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Department (Optional)
+                      <label className="text-[13px] text-muted-foreground block mb-1.5">
+                        Department <span className="text-muted-foreground/40">(Optional)</span>
                       </label>
                       <input
                         type="text"
                         value={answers['__department__'] ?? ''}
                         onChange={e => handleAnswer('__department__', e.target.value)}
-                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="block w-full rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-foreground/20"
                         placeholder="Your department"
                       />
                     </div>
@@ -301,15 +297,15 @@ export function SurveyForm({ survey, questions, tokenRow, locale }: SurveyFormPr
 
                   if (question.type === 'open_ended') {
                     return (
-                      <div key={question.id} className="space-y-1">
+                      <div key={question.id} className="py-5">
                         <p
-                          className="text-sm text-gray-800 mb-1"
+                          className="text-[15px] text-foreground leading-relaxed mb-2"
                           style={displayLocale === 'my' ? { lineHeight: '1.75' } : undefined}
                         >
-                          <span className="text-xs text-gray-400 font-mono mr-2">{index + 1}.</span>
+                          <span className="text-xs text-muted-foreground/60 tabular-nums mr-2 font-medium">{index + 1}.</span>
                           {q(question)}
                         </p>
-                        <p className="text-xs text-gray-400 mb-1">
+                        <p className="text-xs text-muted-foreground/50 mb-2">
                           Optional — share as much or as little as you would like
                         </p>
                         <Textarea
@@ -359,14 +355,17 @@ export function SurveyForm({ survey, questions, tokenRow, locale }: SurveyFormPr
                               return (
                                 <label
                                   key={opt.en}
-                                  className={`flex items-center gap-2 cursor-pointer rounded-lg border px-3 min-h-[44px] transition-colors ${
+                                  className={`flex items-center gap-3 cursor-pointer rounded-lg border px-4 min-h-[48px] transition-all duration-150 ${
                                     isSelected
-                                      ? 'bg-blue-50 border-blue-200'
-                                      : 'bg-white border-gray-200 hover:bg-gray-50'
+                                      ? 'bg-foreground text-background border-foreground font-medium'
+                                      : 'bg-transparent border-border text-foreground hover:bg-muted/30'
                                   }`}
                                 >
-                                  <RadioGroupItem value={optLabel} aria-label={optLabel} />
-                                  <span className="text-sm text-gray-700">{optLabel}</span>
+                                  <RadioGroupItem value={optLabel} aria-label={optLabel} className="sr-only" />
+                                  <span className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${isSelected ? 'border-background' : 'border-muted-foreground/40'}`}>
+                                    {isSelected && <span className="w-2 h-2 rounded-full bg-background" />}
+                                  </span>
+                                  <span className="text-sm">{optLabel}</span>
                                 </label>
                               );
                             })}
@@ -377,9 +376,9 @@ export function SurveyForm({ survey, questions, tokenRow, locale }: SurveyFormPr
 
                     // Select dropdown for Organization and Service Year
                     return (
-                      <div key={question.id} className="space-y-1">
+                      <div key={question.id} className="py-4 space-y-1.5">
                         <label
-                          className="text-sm font-medium text-gray-700 block"
+                          className="text-[13px] text-muted-foreground block"
                           style={displayLocale === 'my' ? { lineHeight: '1.75' } : undefined}
                         >
                           {q(question)}
@@ -414,22 +413,21 @@ export function SurveyForm({ survey, questions, tokenRow, locale }: SurveyFormPr
               </SectionCard>
             ))}
 
-            {/* Validation error count badge */}
+            {/* Validation error banner */}
             {hasSubmitAttempted && errors.size > 0 && (
-              <div className="mb-4 flex items-center gap-2 text-red-600 text-sm font-medium">
-                <span className="inline-flex items-center justify-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
-                  {errors.size} unanswered
-                </span>
-                <span>Please answer all required questions before submitting.</span>
+              <div className="mb-6 flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3 border border-red-100">
+                <span className="font-medium tabular-nums">{errors.size}</span>
+                <span>question{errors.size !== 1 ? 's' : ''} need an answer</span>
               </div>
             )}
 
-            {/* Submit button */}
-            <div className="pb-16">
+            {/* Submit area */}
+            <div className="divider-dot mb-8" />
+            <div className="pb-20">
               <button
                 type="button"
                 onClick={handleSubmitClick}
-                className="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors text-sm"
+                className="px-8 py-3 bg-foreground text-background font-medium rounded-lg hover:bg-foreground/90 transition-colors text-sm min-h-[48px]"
               >
                 Submit Survey
               </button>

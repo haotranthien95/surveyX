@@ -1,7 +1,5 @@
 'use client';
 
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-
 const LIKERT_OPTIONS = [
   { value: '1', en: 'Strongly Disagree', my: 'လုံးဝမသဘောတူပါ' },
   { value: '2', en: 'Disagree', my: 'မသဘောတူပါ' },
@@ -31,48 +29,83 @@ export function LikertInput({
 }: LikertInputProps) {
   return (
     <div
-      className={
-        error
-          ? 'rounded-xl border-2 border-red-400 bg-red-50 p-4'
-          : 'rounded-xl p-4'
-      }
+      className={`py-5 ${error ? 'bg-red-50/50 -mx-4 px-4 rounded-lg border-l-2 border-red-400' : ''}`}
     >
       <p
         id={`q-${questionId}`}
         style={displayLocale === 'my' ? { lineHeight: '1.75' } : undefined}
-        className="text-sm text-gray-800 mb-3"
+        className="text-[15px] text-foreground leading-relaxed mb-4"
       >
-        <span className="text-xs text-gray-400 font-mono mr-2">{questionNumber}.</span>
+        <span className="text-xs text-muted-foreground/60 tabular-nums mr-2 font-medium">{questionNumber}.</span>
         {questionText}
       </p>
 
-      <RadioGroup
-        value={value}
-        onValueChange={onChange}
-        aria-labelledby={`q-${questionId}`}
+      {/* Desktop: horizontal chips */}
+      <div
+        className="hidden sm:flex gap-1.5"
         role="radiogroup"
-        aria-invalid={error ? 'true' : 'false'}
-        className="flex flex-col sm:flex-row gap-2"
+        aria-labelledby={`q-${questionId}`}
+        aria-invalid={error ? 'true' : undefined}
       >
         {LIKERT_OPTIONS.map(option => {
           const label = displayLocale === 'my' ? option.my : option.en;
           const isSelected = value === option.value;
 
           return (
-            <label
+            <button
               key={option.value}
-              className={`flex items-center gap-2 cursor-pointer rounded-lg border px-3 min-h-[48px] sm:min-h-[44px] sm:min-w-[44px] sm:flex-col sm:justify-center sm:text-center transition-colors ${
+              type="button"
+              role="radio"
+              aria-checked={isSelected}
+              aria-label={label}
+              onClick={() => onChange(option.value)}
+              className={`flex-1 py-2.5 px-2 rounded-lg text-xs text-center transition-all duration-150 cursor-pointer border ${
                 isSelected
-                  ? 'bg-blue-50 border-blue-200'
-                  : 'bg-white border-gray-200 hover:bg-gray-50'
+                  ? 'bg-foreground text-background border-foreground font-medium shadow-sm'
+                  : 'bg-transparent text-muted-foreground border-border hover:border-foreground/20 hover:bg-muted/30'
               }`}
             >
-              <RadioGroupItem value={option.value} aria-label={label} />
-              <span className="text-xs text-gray-700">{label}</span>
-            </label>
+              {label}
+            </button>
           );
         })}
-      </RadioGroup>
+      </div>
+
+      {/* Mobile: vertical tappable rows */}
+      <div
+        className="flex flex-col gap-1 sm:hidden"
+        role="radiogroup"
+        aria-labelledby={`q-${questionId}`}
+        aria-invalid={error ? 'true' : undefined}
+      >
+        {LIKERT_OPTIONS.map(option => {
+          const label = displayLocale === 'my' ? option.my : option.en;
+          const isSelected = value === option.value;
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={isSelected}
+              aria-label={label}
+              onClick={() => onChange(option.value)}
+              className={`flex items-center gap-3 min-h-[48px] px-4 rounded-lg text-sm text-left transition-all duration-150 border ${
+                isSelected
+                  ? 'bg-foreground text-background border-foreground font-medium'
+                  : 'bg-transparent text-foreground border-border hover:bg-muted/30'
+              }`}
+            >
+              <span className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+                isSelected ? 'border-background' : 'border-muted-foreground/40'
+              }`}>
+                {isSelected && <span className="w-2 h-2 rounded-full bg-background" />}
+              </span>
+              {label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

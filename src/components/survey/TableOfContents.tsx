@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Progress } from '@/components/ui/progress';
-import { CheckCircle2 } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 interface TocSection {
   id: string;
@@ -56,11 +55,23 @@ export function TableOfContents({ sections, totalProgress }: TableOfContentsProp
   };
 
   return (
-    <nav className="w-60 sticky top-24 hidden lg:block">
-      <p className="text-xs uppercase tracking-wider text-gray-500 mb-1">Survey Progress</p>
-      <Progress value={totalProgress} className="h-1.5 mb-4" />
+    <nav className="w-56 sticky top-24 hidden lg:block" aria-label="Survey sections">
+      {/* Progress bar */}
+      <div className="mb-5">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wider">Progress</span>
+          <span className="text-[11px] text-muted-foreground tabular-nums">{totalProgress}%</span>
+        </div>
+        <div className="h-1 bg-border rounded-full overflow-hidden">
+          <div
+            className="h-full bg-foreground rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${totalProgress}%` }}
+          />
+        </div>
+      </div>
 
-      <ul className="space-y-1">
+      {/* Section list */}
+      <ul className="space-y-0.5">
         {sections.map(section => {
           const isComplete = section.totalCount > 0 && section.answeredCount === section.totalCount;
           const isActive = activeSection === section.id;
@@ -70,20 +81,20 @@ export function TableOfContents({ sections, totalProgress }: TableOfContentsProp
               <button
                 type="button"
                 onClick={() => handleScrollTo(section.id)}
-                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left text-sm transition-colors ${
+                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-left text-[13px] transition-colors ${
                   isActive
-                    ? 'text-blue-700 font-medium bg-blue-50'
+                    ? 'text-foreground font-medium'
                     : isComplete
-                    ? 'text-gray-700'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    ? 'text-muted-foreground'
+                    : 'text-muted-foreground/70 hover:text-foreground hover:bg-muted/30'
                 }`}
               >
                 {isComplete ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                  <Check className="w-3.5 h-3.5 text-green-600 flex-shrink-0" strokeWidth={2.5} />
                 ) : isActive ? (
-                  <span className="w-3.5 h-3.5 rounded-full bg-blue-600 flex-shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-foreground flex-shrink-0 ml-1 mr-0.5" />
                 ) : (
-                  <span className="w-3.5 h-3.5 rounded-full border border-gray-300 flex-shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-border flex-shrink-0 ml-1 mr-0.5" />
                 )}
                 <span className="truncate">{section.title}</span>
               </button>

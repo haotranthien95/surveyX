@@ -23,35 +23,38 @@ export function MobileProgressBar({
   };
 
   return (
-    <div className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm lg:hidden">
-      <div className="h-14 flex flex-col justify-center">
-        <div className="overflow-x-auto scrollbar-none">
-          <div className="flex gap-2 px-4 py-2 w-max">
-            {sections.map(section => {
-              const isActive = activeSection === section.id;
-              return (
-                <button
-                  key={section.id}
-                  type="button"
-                  onClick={() => handleScrollTo(section.id)}
-                  className={`whitespace-nowrap text-xs px-3 py-1 rounded-full transition-colors ${
-                    isActive
-                      ? 'bg-blue-600 text-white font-medium'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  {section.title}
-                </button>
-              );
-            })}
-          </div>
+    <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-border lg:hidden">
+      <div className="overflow-x-auto scrollbar-none">
+        <div className="flex gap-1 px-4 py-2.5 w-max">
+          {sections.map(section => {
+            const isActive = activeSection === section.id;
+            const isComplete = section.totalCount > 0 && section.answeredCount === section.totalCount;
+            return (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => handleScrollTo(section.id)}
+                className={`whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full transition-colors ${
+                  isActive
+                    ? 'bg-foreground text-background font-medium'
+                    : isComplete
+                    ? 'text-green-600 bg-green-50'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
+                }`}
+              >
+                {section.title}
+              </button>
+            );
+          })}
         </div>
       </div>
-      {/* 4px progress bar */}
-      <div
-        className="h-1 bg-blue-600 transition-all duration-300"
-        style={{ width: `${totalProgress}%` }}
-      />
+      {/* Progress bar */}
+      <div className="h-0.5 bg-border">
+        <div
+          className="h-full bg-foreground transition-all duration-500 ease-out"
+          style={{ width: `${totalProgress}%` }}
+        />
+      </div>
     </div>
   );
 }
