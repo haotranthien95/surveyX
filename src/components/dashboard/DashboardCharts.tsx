@@ -10,7 +10,6 @@ import { ENPSGauge } from '@/components/charts/ENPSGauge';
 import { HorizontalBarRanking } from '@/components/charts/HorizontalBarRanking';
 import { FadeIn } from '@/components/motion/FadeIn';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
 import { DIMENSION_COLORS } from '@/lib/chart-colors';
 import { ErrorBoundary } from './ErrorBoundary';
 
@@ -33,9 +32,9 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
     <ChartProvider>
       <div className="space-y-10">
 
-        {/* Metrics row — integrated inline design, not hero cards */}
+        {/* Hero metrics — Optimus-style large numbers with inline labels */}
         <FadeIn>
-          <div className="flex flex-wrap gap-x-8 gap-y-2 divide-x divide-border [&>*:first-child]:pl-0 [&>*]:pl-8">
+          <div className="flex flex-wrap gap-x-10 gap-y-6 md:gap-x-14">
             <MetricCard label="Employee Engagement" value={data.eesScore} trend={{ value: data.eesTrend, label: 'vs last year' }} />
             <MetricCard label="Great Place to Work" value={data.gptwScore} accent={DIMENSION_COLORS.Camaraderie} />
             <MetricCard label="Response Rate" value={data.responseRate} accent={DIMENSION_COLORS.Fairness} />
@@ -43,11 +42,8 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
           </div>
         </FadeIn>
 
-        {/* Leaderboard — horizontal scroll strip with colored dots */}
-        <div>
-          <Separator className="mb-4" />
-          <LeaderboardGrid metrics={data.leaderboard} />
-        </div>
+        {/* Leaderboard — Optimus scrolling marquee ticker */}
+        <LeaderboardGrid metrics={data.leaderboard} />
 
         {/* Dimensions — asymmetric 2:1 grid */}
         <FadeIn delay={0.15}>

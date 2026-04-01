@@ -172,16 +172,17 @@
   --survey-section-pending: #a3a3a3;
 }
 
-/* Optimus-style noise overlay texture */
+/* Optimus scattered pixel/block noise background */
 .noise-overlay {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 1;
-  opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.07;
+  background-image:
+    url("data:image/svg+xml,%3Csvg width='400' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='p' width='400' height='400' patternUnits='userSpaceOnUse'%3E%3Crect x='23' y='15' width='3' height='3' fill='%23999' opacity='0.3'/%3E%3Crect x='67' y='42' width='2' height='2' fill='%23888'/%3E%3Crect x='145' y='8' width='4' height='4' fill='%23aaa' opacity='0.25'/%3E%3Crect x='198' y='55' width='2' height='5' fill='%23999' opacity='0.35'/%3E%3Crect x='267' y='23' width='3' height='2' fill='%23bbb' opacity='0.2'/%3E%3Crect x='312' y='67' width='5' height='3' fill='%23999' opacity='0.15'/%3E%3Crect x='356' y='12' width='2' height='4' fill='%23aaa' opacity='0.3'/%3E%3Crect x='45' y='98' width='4' height='2' fill='%23888' opacity='0.2'/%3E%3Crect x='112' y='123' width='3' height='3' fill='%23999' opacity='0.25'/%3E%3Crect x='178' y='87' width='2' height='6' fill='%23bbb' opacity='0.15'/%3E%3Crect x='234' y='134' width='5' height='2' fill='%23aaa' opacity='0.2'/%3E%3Crect x='289' y='98' width='3' height='4' fill='%23888' opacity='0.3'/%3E%3Crect x='345' y='145' width='2' height='3' fill='%23999' opacity='0.2'/%3E%3Crect x='78' y='178' width='4' height='4' fill='%23aaa' opacity='0.15'/%3E%3Crect x='134' y='198' width='2' height='2' fill='%23888' opacity='0.35'/%3E%3Crect x='189' y='167' width='3' height='5' fill='%23bbb' opacity='0.2'/%3E%3Crect x='256' y='212' width='5' height='3' fill='%23999' opacity='0.25'/%3E%3Crect x='323' y='189' width='2' height='4' fill='%23aaa' opacity='0.3'/%3E%3Crect x='378' y='223' width='3' height='2' fill='%23888' opacity='0.15'/%3E%3Crect x='34' y='256' width='4' height='3' fill='%23999' opacity='0.2'/%3E%3Crect x='98' y='278' width='2' height='5' fill='%23bbb' opacity='0.25'/%3E%3Crect x='156' y='245' width='3' height='2' fill='%23aaa' opacity='0.3'/%3E%3Crect x='212' y='289' width='5' height='4' fill='%23888' opacity='0.15'/%3E%3Crect x='278' y='256' width='2' height='3' fill='%23999' opacity='0.2'/%3E%3Crect x='334' y='298' width='4' height='2' fill='%23bbb' opacity='0.25'/%3E%3Crect x='56' y='334' width='3' height='4' fill='%23aaa' opacity='0.2'/%3E%3Crect x='123' y='356' width='2' height='2' fill='%23888' opacity='0.3'/%3E%3Crect x='189' y='323' width='4' height='5' fill='%23999' opacity='0.15'/%3E%3Crect x='245' y='367' width='3' height='3' fill='%23bbb' opacity='0.2'/%3E%3Crect x='312' y='334' width='5' height='2' fill='%23aaa' opacity='0.25'/%3E%3Crect x='367' y='378' width='2' height='4' fill='%23888' opacity='0.3'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='400' height='400' fill='url(%23p)'/%3E%3C/svg%3E");
   background-repeat: repeat;
-  background-size: 256px 256px;
+  background-size: 400px 400px;
 }
 
 /* Subtle background animation for survey form */
@@ -216,6 +217,32 @@
 @media (prefers-reduced-motion: reduce) {
   .bg-dots { animation: none; }
   .animate-in { animation: none; opacity: 1; }
+}
+
+/* Scrolling marquee strip — Optimus metric ticker */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-strip {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+}
+
+.marquee-content {
+  display: flex;
+  animation: marquee 30s linear infinite;
+  width: max-content;
+}
+
+.marquee-content:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-content { animation: none; }
 }
 
 /* Divider line with dot */

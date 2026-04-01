@@ -1,7 +1,5 @@
 'use client';
 
-import { FadeIn } from '@/components/motion/FadeIn';
-
 interface LeaderboardMetric {
   label: string;
   value: number;
@@ -12,22 +10,31 @@ interface LeaderboardGridProps {
   metrics: LeaderboardMetric[];
 }
 
+// Optimus-style scrolling metric ticker — duplicated for seamless loop
 export function LeaderboardGrid({ metrics }: LeaderboardGridProps) {
+  const items = [...metrics, ...metrics]; // duplicate for seamless marquee
+
   return (
-    <FadeIn delay={0.2}>
-      <div className="overflow-x-auto">
-        <div className="flex gap-6 min-w-max py-1" role="list" aria-label="Leaderboard metrics">
-          {metrics.map((metric) => (
-            <div key={metric.label} className="flex items-center gap-2" role="listitem">
-              <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: metric.color }} />
-              <span className="text-sm font-medium tabular-nums" style={{ color: metric.color }}>
+    <div role="list" aria-label="Leaderboard metrics" className="py-5 border-y border-border">
+      <div className="marquee-strip">
+        <div className="marquee-content">
+          {items.map((metric, i) => (
+            <div
+              key={`${metric.label}-${i}`}
+              role="listitem"
+              className="flex items-baseline gap-2 px-6 whitespace-nowrap"
+            >
+              <span
+                className="text-xl font-medium tabular-nums tracking-tight"
+                style={{ color: metric.color }}
+              >
                 {metric.value}%
               </span>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">{metric.label}</span>
+              <span className="text-xs text-muted-foreground">{metric.label}</span>
             </div>
           ))}
         </div>
       </div>
-    </FadeIn>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { CountUp } from '@/components/motion/CountUp';
 
 interface MetricCardProps {
   label: string;
@@ -10,22 +11,26 @@ interface MetricCardProps {
   accent?: string;
 }
 
-// Integrated metric design — label and value as cohesive unit (not hero layout)
+// Optimus-style: large number with inline label, not stacked cards
 export function MetricCard({ label, value, suffix = '%', trend, accent }: MetricCardProps) {
   return (
-    <div className="flex items-baseline gap-2 py-3">
-      <span
-        className="text-xl font-semibold tabular-nums tracking-tight"
-        style={accent ? { color: accent } : undefined}
-      >
-        {value.toLocaleString()}{suffix}
-      </span>
-      <span className="text-sm text-muted-foreground">{label}</span>
-      {trend && (
-        <span className={`inline-flex items-center gap-0.5 text-xs ml-auto ${trend.value >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-          {trend.value >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-          {Math.abs(trend.value)}%
+    <div className="flex flex-col gap-1">
+      <div className="flex items-baseline gap-2">
+        <span
+          className="text-3xl md:text-4xl font-light tracking-tight tabular-nums"
+          style={accent ? { color: accent } : undefined}
+        >
+          <CountUp value={value} suffix={suffix} />
         </span>
+        <span className="text-xs text-muted-foreground leading-tight max-w-[80px]">
+          {label}
+        </span>
+      </div>
+      {trend && (
+        <div className={`flex items-center gap-1 text-[11px] ${trend.value >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+          {trend.value >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+          <span>{Math.abs(trend.value)}% {trend.label}</span>
+        </div>
       )}
     </div>
   );
