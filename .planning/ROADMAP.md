@@ -61,11 +61,11 @@ Plans:
   3. Floating TOC on the left shows section completion progress as the employee fills in the form
   4. Submitting the form shows a confirmation dialog, and the response is written to the correct survey's CSV file with all question IDs preserved
   5. Validation errors appear inline with helpful messages before the form can be submitted
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: Token validation, form rendering, and bilingual question display
-- [ ] 03-02: Form validation, submission flow, and response persistence
+- [ ] 03-01-PLAN.md — Token service extensions (findTokenByValue + markTokenUsed), validateAnswers, submit API, and i18n keys
+- [ ] 03-02-PLAN.md — Survey page route, all form components (Likert, TOC, mobile bar, confirmation dialog, thank-you screen)
 
 ### Phase 4: Analytics Dashboard
 **Goal**: Admin can select a survey and view a full Chart.js dashboard with GPTW dimension scores, ENPS gauge, Top 10/Bottom 10 statement rankings, department breakdowns, and leaderboard metrics — all computed server-side from collected CSV responses
