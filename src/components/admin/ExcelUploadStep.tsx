@@ -12,6 +12,7 @@ import type { Question } from '@/lib/types';
 
 interface ExcelUploadStepProps {
   surveyId: string;
+  acceptCSV?: boolean;
 }
 
 function formatBytes(bytes: number): string {
@@ -26,7 +27,7 @@ function TypeBadge({ type }: { type: Question['type'] }) {
   return <Badge variant="outline">Demographic</Badge>;
 }
 
-export function ExcelUploadStep({ surveyId }: ExcelUploadStepProps) {
+export function ExcelUploadStep({ surveyId, acceptCSV = false }: ExcelUploadStepProps) {
   const t = useTranslations('surveys');
   const router = useRouter();
   const locale = useLocale();
@@ -40,6 +41,9 @@ export function ExcelUploadStep({ surveyId }: ExcelUploadStepProps) {
   const [formatError, setFormatError] = useState(false);
 
   function isValidFile(file: File): boolean {
+    if (acceptCSV) {
+      return file.name.endsWith('.csv');
+    }
     return file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
   }
 
@@ -137,7 +141,7 @@ export function ExcelUploadStep({ surveyId }: ExcelUploadStepProps) {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".xlsx,.xls"
+        accept={acceptCSV ? '.csv' : '.xlsx,.xls'}
         className="hidden"
         onChange={handleInputChange}
       />
