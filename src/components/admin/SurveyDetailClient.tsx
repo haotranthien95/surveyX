@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ManualQuestionEditor } from '@/components/admin/ManualQuestionEditor';
+import { SurveyMetrics } from '@/components/admin/SurveyMetrics';
 import { useUpdateSurvey, useDeleteSurvey } from '@/hooks/use-surveys';
 import type { Survey, Question } from '@/lib/types';
 
@@ -17,6 +18,7 @@ interface SurveyDetailClientProps {
   survey: Survey;
   questions: Question[];
   responseCount: number;
+  tokenCount: number;
   previewToken: string;
 }
 
@@ -32,7 +34,7 @@ function TypeBadge({ type }: { type: Question['type'] }) {
   return <Badge variant="outline" className="text-[11px]">Demographic</Badge>;
 }
 
-export function SurveyDetailClient({ survey: initialSurvey, questions: initialQuestions, responseCount, previewToken }: SurveyDetailClientProps) {
+export function SurveyDetailClient({ survey: initialSurvey, questions: initialQuestions, responseCount, tokenCount, previewToken }: SurveyDetailClientProps) {
   const t = useTranslations('surveys');
   const router = useRouter();
   const locale = useLocale();
@@ -212,6 +214,15 @@ export function SurveyDetailClient({ survey: initialSurvey, questions: initialQu
           <Trash2 className="w-4 h-4" /> {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
         </button>
       </div>
+
+      {/* Metrics — pie charts */}
+      {initialQuestions.length > 0 && (
+        <SurveyMetrics
+          questions={initialQuestions}
+          responseCount={responseCount}
+          tokenCount={tokenCount}
+        />
+      )}
 
       {/* Questions table */}
       {initialQuestions.length > 0 ? (
