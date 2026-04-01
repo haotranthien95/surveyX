@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertCircle, Loader2 } from 'lucide-react';
+import { ScatteredPixels } from '@/components/motion/ScatteredPixels';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -42,7 +43,7 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-white relative overflow-hidden">
-      <div className="noise-overlay" />
+      <ScatteredPixels />
 
       <div className="grid lg:grid-cols-2 min-h-screen">
         {/* Left — brand panel */}
