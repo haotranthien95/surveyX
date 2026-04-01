@@ -133,3 +133,57 @@
 .font-myanmar {
   font-family: 'Noto Sans Myanmar Variable', 'Segoe UI', system-ui, sans-serif;
 }
+
+/* Burmese readability overrides per UX-DESIGN-SPEC */
+.font-myanmar .text-xs { font-size: 13px; }
+.font-myanmar .text-sm { line-height: 1.65; }
+.font-myanmar .text-base { line-height: 1.65; }
+.font-myanmar h1, .font-myanmar .text-2xl, .font-myanmar .text-xl { line-height: 1.35; }
+.font-myanmar * { letter-spacing: 0 !important; }
+
+/* Survey form typography overrides */
+.survey-question { font-size: 16px; line-height: 1.5; }
+.font-myanmar .survey-question { line-height: 1.75; }
+
+/* Chart dimension CSS custom properties */
+:root {
+  --chart-credibility: #2563eb;
+  --chart-respect: #7c3aed;
+  --chart-fairness: #0891b2;
+  --chart-pride: #ea580c;
+  --chart-camaraderie: #16a34a;
+  --chart-credibility-light: #dbeafe;
+  --chart-respect-light: #ede9fe;
+  --chart-fairness-light: #cffafe;
+  --chart-pride-light: #ffedd5;
+  --chart-camaraderie-light: #dcfce7;
+  --chart-positive: #16a34a;
+  --chart-neutral: #d97706;
+  --chart-negative: #dc2626;
+  --chart-promoter: #16a34a;
+  --chart-passive: #d97706;
+  --chart-detractor: #dc2626;
+  --survey-progress: #2563eb;
+  --survey-section-active: #2563eb;
+  --survey-section-complete: #16a34a;
+  --survey-section-pending: #a3a3a3;
+}
+
+/* Subtle background animation for survey form */
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(10px, -10px); }
+  50% { transform: translate(-5px, 15px); }
+  75% { transform: translate(-10px, -5px); }
+}
+
+.bg-dots {
+  background-image: radial-gradient(circle, #2563eb 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.03;
+  animation: drift 60s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-dots { animation: none; }
+}

@@ -12,14 +12,18 @@ interface ChartSectionProps {
 
 export function ChartSection({ title, description, height = 300, children }: ChartSectionProps) {
   return (
-    <Card className="p-4 border-gray-100">
-      <div className="mb-3">
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-        {description && <p className="text-xs text-gray-500 mt-0.5">{description}</p>}
+    <Card className="border-gray-100 overflow-hidden">
+      {title && (
+        <div className="px-5 pt-5 pb-0">
+          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+          {description && <p className="text-xs text-gray-500 mt-0.5">{description}</p>}
+        </div>
+      )}
+      <div className="p-5">
+        <LazyChart height={height}>
+          {children}
+        </LazyChart>
       </div>
-      <LazyChart height={height}>
-        {children}
-      </LazyChart>
     </Card>
   );
 }

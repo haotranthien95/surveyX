@@ -11,14 +11,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const hasSmtp = settings !== null;
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#fafafa]">
       <AdminSidebar />
       <main className="flex-1 overflow-auto">
-        <AdminLayoutClient hasSmtp={hasSmtp}>
-          {children}
-        </AdminLayoutClient>
+        <div className="max-w-[1200px] mx-auto">
+          <AdminLayoutClient hasSmtp={hasSmtp}>
+            {children}
+          </AdminLayoutClient>
+        </div>
       </main>
-      <Toaster />
+      <Toaster richColors />
     </div>
   );
 }
