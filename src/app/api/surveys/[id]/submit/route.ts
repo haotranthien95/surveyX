@@ -1,8 +1,8 @@
 // src/app/api/surveys/[id]/submit/route.ts
 // Public route — no admin session auth. Authenticated by token in body.
 import { validateToken, markTokenUsed } from '@/lib/services/token.service';
-import { appendRow } from '@/lib/services/csv.service';
 import { getQuestions } from '@/lib/services/survey.service';
+import { db, schema } from '@/lib/db';
 
 export async function POST(
   request: Request,
@@ -24,35 +24,31 @@ export async function POST(
     return Response.json({ error: 'Missing answers' }, { status: 400 });
   }
 
-  // Validate token — returns null if used, expired, or not found
+  // Validate token
   const tokenRow = await validateToken(body.token, surveyId);
   if (!tokenRow) {
     return Response.json({ error: 'Invalid or already-used token' }, { status: 410 });
   }
 
-  // Load question schema to ensure consistent CSV columns
+  // Build complete answers object with all question IDs
   const questions = await getQuestions(surveyId);
   const allQuestionIds = questions.map(q => q.id);
 
-  // Build response row: all question IDs → empty string default, then merge answers
-  const answerColumns: Record<string, string> = {};
+  const answers: Record<string, string> = {};
   for (const id of allQuestionIds) {
-    answerColumns[id] = '';
+    answers[id] = '';
   }
   for (const [id, value] of Object.entries(body.answers)) {
-    answerColumns[id] = value;
+    answers[id] = value;
   }
 
-  const responseRow: Record<string, string> = {
+  // Persist response FIRST, then invalidate token (ordering critical)
+  await db.insert(schema.responses).values({
     surveyId,
     token: body.token,
     email: tokenRow.email,
-    submittedAt: new Date().toISOString(),
-    ...answerColumns,
-  };
-
-  // Persist response FIRST — then invalidate token (ordering critical: FORM-11 before FORM-10)
-  await appendRow(`responses-${surveyId}.csv`, responseRow);
+    answers,
+  });
   await markTokenUsed(body.token, surveyId);
 
   return Response.json({ success: true });

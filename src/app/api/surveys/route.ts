@@ -32,6 +32,6 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Survey name is required.' }, { status: 400 });
   }
 
-  const survey = await createSurvey({ name: name.trim(), description });
+  const survey = await createSurvey(name.trim(), description);
   return Response.json({ survey }, { status: 201 });
 }

@@ -1,14 +1,41 @@
 // src/lib/services/smtp.service.ts
-import { readRows, writeRows } from './csv.service';
+import { db, schema } from '@/lib/db';
+import { eq } from 'drizzle-orm';
 import type { SmtpSettings } from '@/lib/types';
 
-const SMTP_FILE = 'smtp-settings.csv';
-
 export async function getSmtpSettings(): Promise<SmtpSettings | null> {
-  const rows = await readRows<Record<string, string>>(SMTP_FILE);
-  return (rows[0] as unknown as SmtpSettings) ?? null;
+  const [row] = await db.select().from(schema.smtpSettings).where(eq(schema.smtpSettings.id, 1));
+  if (!row) return null;
+  return {
+    host: row.host,
+    port: row.port,
+    username: row.username,
+    password: row.password,
+    fromAddress: row.fromAddress,
+    fromName: row.fromName,
+  };
 }
 
 export async function saveSmtpSettings(settings: SmtpSettings): Promise<void> {
-  await writeRows(SMTP_FILE, [settings as unknown as Record<string, string>]);
+  const existing = await getSmtpSettings();
+  if (existing) {
+    await db.update(schema.smtpSettings).set({
+      host: settings.host,
+      port: settings.port,
+      username: settings.username,
+      password: settings.password,
+      fromAddress: settings.fromAddress,
+      fromName: settings.fromName,
+    }).where(eq(schema.smtpSettings.id, 1));
+  } else {
+    await db.insert(schema.smtpSettings).values({
+      id: 1,
+      host: settings.host,
+      port: settings.port,
+      username: settings.username,
+      password: settings.password,
+      fromAddress: settings.fromAddress,
+      fromName: settings.fromName,
+    });
+  }
 }

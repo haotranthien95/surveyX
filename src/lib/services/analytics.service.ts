@@ -1,14 +1,14 @@
 // src/lib/services/analytics.service.ts
 // Server-only analytics aggregation — do NOT add 'use client'
 
-import { readRows } from './csv.service';
+import { db, schema } from '@/lib/db';
+import { eq } from 'drizzle-orm';
 import { countSurveyTokens } from './token.service';
 import { GPTW_QUESTIONS } from '@/lib/constants';
 import type { DashboardData, DepartmentBreakdownData } from '@/lib/types/analytics';
 
 const ANONYMITY_THRESHOLD = 5;
 
-// Dimension display name mapping (Title Case)
 const DIMENSION_DISPLAY: Record<string, string> = {
   camaraderie: 'Camaraderie',
   credibility: 'Credibility',
@@ -17,15 +17,8 @@ const DIMENSION_DISPLAY: Record<string, string> = {
   respect: 'Respect',
 };
 
-// The 5 scored dimensions (excludes 'uncategorized')
 const SCORED_DIMENSIONS = ['camaraderie', 'credibility', 'fairness', 'pride', 'respect'] as const;
 
-/**
- * Compute % favorable for a single question across all rows.
- * Favorable = answer "4" or "5" (string comparison — CSV values are always strings).
- * Empty strings are EXCLUDED from the denominator before any calculation.
- * Returns 0 if there are no valid (non-empty) answers.
- */
 function favorableScore(rows: Record<string, string>[], questionId: string): number {
   const validAnswers = rows
     .map(r => r[questionId])
@@ -37,11 +30,6 @@ function favorableScore(rows: Record<string, string>[], questionId: string): num
   return Math.round((favorable / validAnswers.length) * 100);
 }
 
-/**
- * Compute ENPS from UNC-47 responses.
- * Promoters = "4" or "5", Passives = "3", Detractors = "1" or "2".
- * Percentages rounded to nearest integer. Score = promoters% - detractors% (signed integer).
- */
 function computeENPS(
   rows: Record<string, string>[]
 ): { score: number; promoters: number; passives: number; detractors: number } {
@@ -61,21 +49,14 @@ function computeENPS(
   const promoters = Math.round((promoterCount / total) * 100);
   const passives = Math.round((passiveCount / total) * 100);
   const detractors = Math.round((detractorCount / total) * 100);
-  const score = promoters - detractors;
 
-  return { score, promoters, passives, detractors };
+  return { score: promoters - detractors, promoters, passives, detractors };
 }
 
-/**
- * Compute dimension breakdown for a segment of rows.
- * If segment has < ANONYMITY_THRESHOLD rows, all dimension scores are null.
- */
 function computeSegmentDimensions(
   rows: Record<string, string>[],
-  questionScoreMap: Record<string, number>
 ): { dimension: string; score: number | null }[] {
   if (rows.length < ANONYMITY_THRESHOLD) {
-    // Below anonymity threshold — null all scores
     return SCORED_DIMENSIONS.map(dim => ({
       dimension: DIMENSION_DISPLAY[dim],
       score: null,
@@ -94,36 +75,35 @@ function computeSegmentDimensions(
   });
 }
 
-/**
- * Main analytics aggregation function.
- * Reads responses-{surveyId}.csv and tokens-{surveyId}.csv.
- * Returns null if no responses exist.
- */
 export async function computeAnalytics(surveyId: string): Promise<DashboardData | null> {
-  // Step 1: Load responses
-  const rows = await readRows<Record<string, string>>(`responses-${surveyId}.csv`);
+  // Load responses from PostgreSQL
+  const dbResponses = await db.select().from(schema.responses)
+    .where(eq(schema.responses.surveyId, surveyId));
 
-  // Step 2: Return null if no responses
-  if (rows.length === 0) return null;
+  if (dbResponses.length === 0) return null;
 
-  // Step 3: Get all 47 Likert question IDs
+  // Convert DB rows to flat answer records (same shape as old CSV rows)
+  const rows: Record<string, string>[] = dbResponses.map(r => {
+    const answers = r.answers as Record<string, string>;
+    return { ...answers, email: r.email };
+  });
+
   const likertQuestions = GPTW_QUESTIONS.filter(q => q.type === 'likert');
-  // Verify we have exactly 47: CAM-01..08, CRE-09..17, FAI-18..25, PRI-26..35, RES-36..46, UNC-47
 
-  // Step 5: Compute per-question favorable scores
+  // Per-question favorable scores
   const questionScoreMap: Record<string, number> = {};
   for (const q of likertQuestions) {
     questionScoreMap[q.id] = favorableScore(rows, q.id);
   }
 
-  // Step 6: EES = mean of all 47 per-question scores, rounded
+  // EES = mean of all per-question scores
   const allScores = Object.values(questionScoreMap);
   const eesScore = Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length);
 
-  // Step 7: GPTW score = favorableScore('UNC-47')
+  // GPTW score = UNC-47
   const gptwScore = questionScoreMap['UNC-47'] ?? 0;
 
-  // Step 8: Dimension scores (5 dimensions, Title Case)
+  // Dimension scores
   const dimensionScoreMap: Record<string, number> = {};
   for (const dim of SCORED_DIMENSIONS) {
     const dimQuestions = likertQuestions.filter(q => q.dimension === dim);
@@ -138,73 +118,50 @@ export async function computeAnalytics(surveyId: string): Promise<DashboardData 
     score: dimensionScoreMap[dim],
   }));
 
-  // Step 9: Sentiment across ALL Likert answers
-  let positiveCount = 0;
-  let neutralCount = 0;
-  let negativeCount = 0;
-  let totalValidLikertAnswers = 0;
-
+  // Sentiment
+  let positiveCount = 0, neutralCount = 0, negativeCount = 0, totalValid = 0;
   for (const q of likertQuestions) {
     for (const row of rows) {
       const v = row[q.id];
-      if (v === undefined || v === '') continue;
-      totalValidLikertAnswers++;
+      if (!v) continue;
+      totalValid++;
       if (v === '4' || v === '5') positiveCount++;
       else if (v === '3') neutralCount++;
-      else if (v === '1' || v === '2') negativeCount++;
+      else negativeCount++;
     }
   }
 
   const sentiment = {
-    positive: totalValidLikertAnswers > 0
-      ? Math.round((positiveCount / totalValidLikertAnswers) * 100)
-      : 0,
-    neutral: totalValidLikertAnswers > 0
-      ? Math.round((neutralCount / totalValidLikertAnswers) * 100)
-      : 0,
-    negative: totalValidLikertAnswers > 0
-      ? Math.round((negativeCount / totalValidLikertAnswers) * 100)
-      : 0,
+    positive: totalValid > 0 ? Math.round((positiveCount / totalValid) * 100) : 0,
+    neutral: totalValid > 0 ? Math.round((neutralCount / totalValid) * 100) : 0,
+    negative: totalValid > 0 ? Math.round((negativeCount / totalValid) * 100) : 0,
   };
 
-  // Step 10: ENPS from UNC-47
+  // ENPS
   const enps = computeENPS(rows);
 
-  // Step 11: Strengths — all 47 per-question scores, sorted descending, top 10
-  const scoredQuestions = likertQuestions.map(q => {
-    const en = q.en.length > 60 ? q.en.substring(0, 60) + '…' : q.en;
-    return { label: en, score: questionScoreMap[q.id] };
-  });
+  // Strengths / Opportunities
+  const scoredQuestions = likertQuestions.map(q => ({
+    label: q.en.length > 60 ? q.en.substring(0, 60) + '…' : q.en,
+    score: questionScoreMap[q.id],
+  }));
 
-  const sortedDesc = [...scoredQuestions].sort((a, b) => b.score - a.score);
-  const strengths = sortedDesc.slice(0, 10);
+  const strengths = [...scoredQuestions].sort((a, b) => b.score - a.score).slice(0, 10);
+  const opportunities = [...scoredQuestions].sort((a, b) => a.score - b.score).slice(0, 10);
 
-  // Step 12: Opportunities — same list sorted ascending, bottom 10
-  const sortedAsc = [...scoredQuestions].sort((a, b) => a.score - b.score);
-  const opportunities = sortedAsc.slice(0, 10);
-
-  // Step 13: Response rate
+  // Response rate
   const totalTokens = await countSurveyTokens(surveyId);
-  const responseRate = totalTokens === 0
-    ? 0
-    : Math.round((rows.length / totalTokens) * 100);
+  const responseRate = totalTokens === 0 ? 0 : Math.round((rows.length / totalTokens) * 100);
 
-  // Step 13 continued: Innovation and Leadership composite scores
-  // Innovation: discretionary grouping of questions reflecting adaptability and new idea encouragement
-  // Leadership: discretionary grouping of credibility questions reflecting leadership quality
+  // Innovation / Leadership composite scores
   const innovationIds = ['CRE-11', 'RES-38', 'RES-44', 'PRI-28'];
   const leadershipIds = ['CRE-09', 'CRE-10', 'CRE-12', 'CRE-13', 'CRE-15'];
 
   const innovationScore = Math.round(
-    innovationIds
-      .map(id => questionScoreMap[id] ?? 0)
-      .reduce((a, b) => a + b, 0) / innovationIds.length
+    innovationIds.map(id => questionScoreMap[id] ?? 0).reduce((a, b) => a + b, 0) / innovationIds.length
   );
-
   const leadershipScore = Math.round(
-    leadershipIds
-      .map(id => questionScoreMap[id] ?? 0)
-      .reduce((a, b) => a + b, 0) / leadershipIds.length
+    leadershipIds.map(id => questionScoreMap[id] ?? 0).reduce((a, b) => a + b, 0) / leadershipIds.length
   );
 
   const leaderboard = [
@@ -221,7 +178,7 @@ export async function computeAnalytics(surveyId: string): Promise<DashboardData 
     { label: 'Leadership',   value: leadershipScore,               color: 'hsl(25 75% 55%)'  },
   ];
 
-  // Step 14: Department breakdown — group by DEM-ORG
+  // Department breakdown — group by DEM-ORG
   const segmentMap = new Map<string, Record<string, string>[]>();
   for (const row of rows) {
     const org = row['DEM-ORG'] || 'Unknown';
@@ -229,21 +186,18 @@ export async function computeAnalytics(surveyId: string): Promise<DashboardData 
     segmentMap.get(org)!.push(row);
   }
 
-  const segments = Array.from(segmentMap.entries()).map(([segmentLabel, segmentRows]) => ({
-    segmentLabel,
-    dimensions: computeSegmentDimensions(segmentRows, questionScoreMap),
-    responseCount: segmentRows.length,
-  }));
-
   const departmentBreakdown: DepartmentBreakdownData = {
-    segments,
+    segments: Array.from(segmentMap.entries()).map(([segmentLabel, segmentRows]) => ({
+      segmentLabel,
+      dimensions: computeSegmentDimensions(segmentRows),
+      responseCount: segmentRows.length,
+    })),
     anonymityThreshold: ANONYMITY_THRESHOLD,
   };
 
-  // Step 16: Assemble and return DashboardData
   return {
     eesScore,
-    eesTrend: 0,  // hardcoded — no multi-survey comparison in v1
+    eesTrend: 0,
     gptwScore,
     responseRate,
     totalResponses: rows.length,
