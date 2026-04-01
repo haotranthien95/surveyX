@@ -39,7 +39,9 @@ function SurveySelectorInner({ surveys, activeSurveyId }: SurveySelectorProps) {
   return (
     <Select value={activeSurveyId ?? ''} onValueChange={handleChange}>
       <SelectTrigger className="w-64">
-        <SelectValue placeholder="Select survey" />
+        <span className="truncate">
+          {surveys.find(s => s.id === activeSurveyId)?.name || 'Select survey'}
+        </span>
       </SelectTrigger>
       <SelectContent>
         {surveys.map(s => (

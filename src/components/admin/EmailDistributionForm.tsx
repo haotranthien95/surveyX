@@ -132,8 +132,10 @@ export function EmailDistributionForm({ survey, surveys, priorInvitations }: Pro
             <div className="space-y-1.5">
               <Label>{t('inviteSurveyLabel')}</Label>
               <Select value={selectedSurveyId} onValueChange={(v) => { if (v) setSelectedSurveyId(v); }}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('inviteSurveyPlaceholder')} />
+                <SelectTrigger className="w-full">
+                  <span className="truncate">
+                    {surveys.find(s => s.id === selectedSurveyId)?.name || t('inviteSurveyPlaceholder')}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {surveys.map((s) => (

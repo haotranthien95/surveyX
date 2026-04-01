@@ -412,7 +412,7 @@ export function SurveyForm({ survey, questions, tokenRow, locale, translations }
                           onValueChange={value => { if (value) handleAnswer(question.id, value); }}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder={t.selectPlaceholder} />
+                            <span className="truncate">{answers[question.id] || t.selectPlaceholder}</span>
                           </SelectTrigger>
                           <SelectContent>
                             {question.options?.map(opt => {

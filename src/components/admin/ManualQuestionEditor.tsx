@@ -177,7 +177,7 @@ export function ManualQuestionEditor({ surveyId, initialQuestions }: ManualQuest
               {/* Type */}
               <Select value={q.type} onValueChange={v => { if (v) updateQuestion(q.localId, 'type', v); }}>
                 <SelectTrigger className="w-40 h-8 text-xs">
-                  <SelectValue />
+                  <span className="truncate">{TYPES.find(t => t.value === q.type)?.label || q.type}</span>
                 </SelectTrigger>
                 <SelectContent>
                   {TYPES.map(t => (
@@ -190,7 +190,7 @@ export function ManualQuestionEditor({ surveyId, initialQuestions }: ManualQuest
               {q.type === 'likert' && (
                 <Select value={q.dimension || '_none'} onValueChange={v => { if (v) updateQuestion(q.localId, 'dimension', v === '_none' ? '' : v); }}>
                   <SelectTrigger className="w-36 h-8 text-xs">
-                    <SelectValue placeholder="Dimension" />
+                    <span className="truncate">{DIMENSIONS.find(d => d.value === (q.dimension || '_none'))?.label || 'Dimension'}</span>
                   </SelectTrigger>
                   <SelectContent>
                     {DIMENSIONS.map(d => (
