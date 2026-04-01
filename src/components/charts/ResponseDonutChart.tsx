@@ -61,7 +61,7 @@ export function ResponseDonutChart({ positive, neutral, negative }: ResponseDonu
           </Pie>
         </PieChart>
       </ChartContainer>
-      {/* Legend below */}
+      {/* Legend + baseline */}
       <div className="flex items-center justify-center gap-5 mt-2">
         {data.map((entry) => (
           <div key={entry.name} className="flex items-center gap-1.5">
@@ -71,6 +71,9 @@ export function ResponseDonutChart({ positive, neutral, negative }: ResponseDonu
           </div>
         ))}
       </div>
+      <p className="text-center text-[10px] text-muted-foreground/50 mt-1">
+        Industry baseline: ~80% positive
+      </p>
     </div>
   );
 }

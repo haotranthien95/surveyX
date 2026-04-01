@@ -73,6 +73,9 @@ export function ENPSGauge({ score, promoters, passives, detractors }: ENPSGaugeP
           </div>
         ))}
       </div>
+      <p className="text-center text-[10px] text-muted-foreground/50 mt-1">
+        Industry baseline: ENPS 70+
+      </p>
     </div>
   );
 }
