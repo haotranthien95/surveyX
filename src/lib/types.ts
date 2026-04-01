@@ -36,3 +36,12 @@ export interface Token {
   used: boolean;
   sentAt: string;
 }
+
+export interface SmtpSettings {
+  host: string;
+  port: string;       // stored as string in CSV
+  username: string;
+  password: string;   // stored as-is; never transmitted to client
+  fromAddress: string;
+  fromName: string;
+}

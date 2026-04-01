@@ -69,3 +69,17 @@ export async function appendRow(
     }
   }
 }
+
+/**
+ * Write (overwrite) all rows to a named CSV file.
+ * Use for single-row files like smtp-settings.csv where full overwrite is correct.
+ * Does NOT use ETag retry — caller is responsible for avoiding concurrent writes.
+ */
+export async function writeRows(
+  filename: string,
+  rows: Record<string, string>[]
+): Promise<void> {
+  const adapter = getStorageAdapter();
+  const csv = serializeCSV(rows);
+  await adapter.write(filename, csv);
+}
