@@ -116,8 +116,7 @@ export function TenureJourneyChart({ data }: TenureJourneyChartProps) {
             domain={[0, 100]}
             width={40}
           />
-          {/* Company-wide baseline */}
-          <ReferenceLine y={78} stroke="hsl(var(--muted-foreground))" strokeDasharray="6 4" strokeWidth={1} label={{ value: 'Baseline', position: 'insideTopRight', fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} />
+          <ReferenceLine y={78} stroke="hsl(0 0% 60%)" strokeDasharray="8 4" strokeWidth={1.5} />
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 1 }} />
           <Legend
             wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }}
