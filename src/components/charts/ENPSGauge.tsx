@@ -26,18 +26,19 @@ export function ENPSGauge({ score, promoters, passives, detractors }: ENPSGaugeP
 
   return (
     <div role="img" aria-label={`ENPS gauge: score ${score}. ${promoters}% promoters, ${passives}% passives, ${detractors}% detractors`}>
-      <ChartContainer config={chartConfig} className="h-[220px] w-full">
+      <ChartContainer config={chartConfig} className="h-[200px] w-full">
         <PieChart accessibilityLayer>
           <Pie
             data={data}
             dataKey="value"
             nameKey="name"
-            startAngle={180}
-            endAngle={0}
-            innerRadius="70%"
-            outerRadius="95%"
-            strokeWidth={2}
+            startAngle={200}
+            endAngle={-20}
+            innerRadius="65%"
+            outerRadius="88%"
+            strokeWidth={3}
             stroke="hsl(var(--background))"
+            paddingAngle={1.5}
           >
             {data.map((entry) => (
               <Cell key={entry.name} fill={entry.fill} />
@@ -46,12 +47,12 @@ export function ENPSGauge({ score, promoters, passives, detractors }: ENPSGaugeP
               content={({ viewBox }) => {
                 if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
                   return (
-                    <text x={viewBox.cx} y={(viewBox.cy || 0) - 4} textAnchor="middle" dominantBaseline="middle">
-                      <tspan x={viewBox.cx} y={(viewBox.cy || 0) - 12} className="fill-foreground text-3xl font-semibold tabular-nums">
+                    <text x={viewBox.cx} y={(viewBox.cy || 0) + 4} textAnchor="middle" dominantBaseline="middle">
+                      <tspan x={viewBox.cx} y={(viewBox.cy || 0) - 2} className="fill-foreground text-3xl font-semibold tabular-nums">
                         {score}
                       </tspan>
-                      <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 12} className="fill-muted-foreground text-xs">
-                        ENPS Score
+                      <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 20} className="fill-muted-foreground text-[11px]">
+                        ENPS
                       </tspan>
                     </text>
                   );
@@ -62,6 +63,16 @@ export function ENPSGauge({ score, promoters, passives, detractors }: ENPSGaugeP
           </Pie>
         </PieChart>
       </ChartContainer>
+      {/* Legend */}
+      <div className="flex items-center justify-center gap-5 -mt-4">
+        {data.map((entry) => (
+          <div key={entry.name} className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.fill }} />
+            <span className="text-[11px] text-muted-foreground">{entry.name}</span>
+            <span className="text-[11px] font-medium tabular-nums">{entry.value}%</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

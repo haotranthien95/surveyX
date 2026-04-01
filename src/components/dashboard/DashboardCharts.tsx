@@ -93,10 +93,10 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
                     </TabsList>
                   </div>
                   <TabsContent value="strengths" className="mt-0">
-                    <HorizontalBarRanking items={data.strengths} color={DIMENSION_COLORS.Camaraderie} />
+                    <HorizontalBarRanking items={data.strengths} baseHue={155} />
                   </TabsContent>
                   <TabsContent value="opportunities" className="mt-0">
-                    <HorizontalBarRanking items={data.opportunities} color="hsl(var(--muted-foreground))" />
+                    <HorizontalBarRanking items={data.opportunities} baseHue={0} />
                   </TabsContent>
                 </Tabs>
               </ErrorBoundary>

@@ -1,7 +1,6 @@
 'use client';
 
-import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
+import { getRankingGradient } from '@/lib/chart-colors';
 
 interface RankingItem {
   label: string;
@@ -10,31 +9,48 @@ interface RankingItem {
 
 interface HorizontalBarRankingProps {
   items: RankingItem[];
-  color?: string;
+  baseHue?: number; // 155=green for strengths, 0=red for opportunities
 }
 
-const chartConfig = {
-  score: { label: 'Score' },
-} satisfies ChartConfig;
-
-export function HorizontalBarRanking({ items, color = 'hsl(var(--foreground))' }: HorizontalBarRankingProps) {
-  const data = items.map((item) => ({
-    name: item.label.length > 45 ? item.label.slice(0, 42) + '...' : item.label,
-    score: item.score,
-    fill: color,
-  }));
+// Custom pure-CSS ranking chart — better control than Recharts for this pattern
+export function HorizontalBarRanking({ items, baseHue = 155 }: HorizontalBarRankingProps) {
+  const max = Math.max(...items.map((i) => i.score), 100);
 
   return (
-    <div role="img" aria-label={`Ranking: ${items.map(i => `${i.label} ${i.score}%`).join(', ')}`}>
-      <ChartContainer config={chartConfig} className="h-[400px] w-full">
-        <BarChart data={data} layout="vertical" accessibilityLayer margin={{ left: 8, right: 16 }}>
-          <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis type="number" tickLine={false} axisLine={false} fontSize={11} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
-          <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} fontSize={11} width={180} />
-          <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${value}% favorable`} />} />
-          <Bar dataKey="score" radius={[0, 4, 4, 0]} barSize={16} />
-        </BarChart>
-      </ChartContainer>
+    <div
+      role="img"
+      aria-label={`Ranking: ${items.map(i => `${i.label} ${i.score}%`).join(', ')}`}
+      className="space-y-2.5"
+    >
+      {items.map((item, i) => (
+        <div key={item.label} className="group flex items-center gap-3">
+          {/* Rank number */}
+          <span className="text-[11px] tabular-nums text-muted-foreground/50 w-4 text-right shrink-0">
+            {i + 1}
+          </span>
+
+          {/* Label + bar */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[12px] text-foreground/80 truncate pr-2" title={item.label}>
+                {item.label}
+              </span>
+              <span className="text-[12px] font-medium tabular-nums shrink-0" style={{ color: getRankingGradient(i, items.length, baseHue) }}>
+                {item.score}%
+              </span>
+            </div>
+            <div className="h-1.5 bg-muted/40 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700 ease-out"
+                style={{
+                  width: `${(item.score / max) * 100}%`,
+                  backgroundColor: getRankingGradient(i, items.length, baseHue),
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
