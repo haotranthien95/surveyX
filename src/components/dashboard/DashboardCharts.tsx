@@ -12,20 +12,8 @@ import { FadeIn } from '@/components/motion/FadeIn';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DIMENSION_COLORS } from '@/lib/chart-colors';
 import { ErrorBoundary } from './ErrorBoundary';
-
-interface DashboardData {
-  eesScore: number;
-  eesTrend: number;
-  gptwScore: number;
-  responseRate: number;
-  totalResponses: number;
-  dimensions: { dimension: string; score: number }[];
-  sentiment: { positive: number; neutral: number; negative: number };
-  enps: { score: number; promoters: number; passives: number; detractors: number };
-  strengths: { label: string; score: number }[];
-  opportunities: { label: string; score: number }[];
-  leaderboard: { label: string; value: number; color: string }[];
-}
+import { DepartmentBreakdownChart } from './DepartmentBreakdownChart';
+import type { DashboardData } from '@/lib/types/analytics';
 
 export function DashboardCharts({ data }: { data: DashboardData }) {
   return (
@@ -98,6 +86,15 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
               </ErrorBoundary>
             </div>
           </div>
+        </FadeIn>
+
+        {/* Department Breakdown — DATA-04 anonymity threshold enforced in analytics.service */}
+        <FadeIn delay={0.25}>
+          <ErrorBoundary>
+            <ChartSection title="Department Breakdown" description="Dimension scores by organization segment">
+              <DepartmentBreakdownChart data={data.departmentBreakdown} />
+            </ChartSection>
+          </ErrorBoundary>
         </FadeIn>
       </div>
     </ChartProvider>

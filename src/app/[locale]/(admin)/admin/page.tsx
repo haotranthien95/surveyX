@@ -4,14 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { CheckCircle2, Circle } from 'lucide-react';
 import { listSurveys } from '@/lib/services/survey.service';
 import { DashboardCharts } from '@/components/dashboard/DashboardCharts';
+import { computeAnalytics } from '@/lib/services/analytics.service';
+import { SurveySelector } from '@/components/dashboard/SurveySelector';
 
-export default async function AdminDashboardPage() {
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ survey?: string }>;
+}) {
   const t = await getTranslations('dashboard');
-  const surveys = await listSurveys();
-  const hasSurveys = surveys.length > 0;
+  const { survey: surveyId } = await searchParams;
 
-  // Show onboarding if no surveys exist yet
-  if (!hasSurveys) {
+  const surveys = await listSurveys();
+
+  // Show onboarding checklist when no surveys exist yet
+  if (surveys.length === 0) {
     const checklist = [
       { label: t('step1'), done: false },
       { label: t('step2'), done: false },
@@ -48,62 +55,13 @@ export default async function AdminDashboardPage() {
     );
   }
 
-  // Dashboard with charts — surveys exist
-  // TODO: Phase 4 will compute real analytics from responses CSV
-  // For now, show the dashboard layout with demo data
-  const demoData = {
-    eesScore: 79,
-    eesTrend: -4,
-    gptwScore: 87,
-    responseRate: 92,
-    totalResponses: 276,
-    dimensions: [
-      { dimension: 'Credibility', score: 75 },
-      { dimension: 'Respect', score: 75 },
-      { dimension: 'Fairness', score: 78 },
-      { dimension: 'Pride', score: 84 },
-      { dimension: 'Camaraderie', score: 84 },
-    ],
-    sentiment: { positive: 79, neutral: 16, negative: 5 },
-    enps: { score: 84, promoters: 86, passives: 12, detractors: 2 },
-    strengths: [
-      { label: 'People here are treated fairly regardless of their age', score: 95 },
-      { label: 'This is a physically safe place to work', score: 94 },
-      { label: 'I can be myself around here', score: 93 },
-      { label: 'My colleagues care about me as a human being', score: 92 },
-      { label: 'I\'m proud to tell others I work here', score: 91 },
-      { label: 'I feel good about the ways we contribute', score: 90 },
-      { label: 'I felt genuinely welcomed when I joined', score: 89 },
-      { label: 'My work has special meaning', score: 89 },
-      { label: 'I can count on colleagues to help me', score: 88 },
-      { label: 'Our leaders embody our best characteristics', score: 87 },
-    ],
-    opportunities: [
-      { label: 'I am offered training or development', score: 46 },
-      { label: 'I receive the same support as my peers', score: 55 },
-      { label: 'Company policies are enforced consistently', score: 58 },
-      { label: 'I am compensated fairly for my work', score: 60 },
-      { label: 'My workload is reasonable and distributed fairly', score: 62 },
-      { label: 'I am kept in the loop on important changes', score: 63 },
-      { label: 'I feel confident raising a concern', score: 65 },
-      { label: 'Teams and resources are organized effectively', score: 66 },
-      { label: 'I experience great collaboration across departments', score: 67 },
-      { label: 'Everyone has opportunity for special recognition', score: 68 },
-    ],
-    leaderboard: [
-      { label: 'Completion', value: 92, color: 'hsl(220 70% 55%)' },
-      { label: 'Credibility', value: 75, color: 'hsl(220 70% 55%)' },
-      { label: 'Respect', value: 75, color: 'hsl(255 55% 58%)' },
-      { label: 'Fairness', value: 78, color: 'hsl(175 45% 45%)' },
-      { label: 'Pride', value: 84, color: 'hsl(25 75% 55%)' },
-      { label: 'Camaraderie', value: 84, color: 'hsl(155 45% 45%)' },
-      { label: 'Satisfaction', value: 87, color: 'hsl(220 70% 55%)' },
-      { label: 'ENPS', value: 84, color: 'hsl(155 45% 45%)' },
-      { label: 'Engagement', value: 80, color: 'hsl(255 55% 58%)' },
-      { label: 'Innovation', value: 72, color: 'hsl(175 45% 45%)' },
-      { label: 'Leadership', value: 76, color: 'hsl(25 75% 55%)' },
-    ],
-  };
+  // Surveys exist — determine which one is active
+  const activeSurveyId = surveyId ?? surveys[0]?.id;
+
+  // Compute real analytics for the selected survey (null when no responses)
+  const analyticsData = activeSurveyId
+    ? await computeAnalytics(activeSurveyId)
+    : null;
 
   return (
     <div className="p-8">
@@ -111,7 +69,19 @@ export default async function AdminDashboardPage() {
         <h1 className="text-2xl font-light text-gray-900 tracking-tight">{t('title')}</h1>
         <p className="text-sm text-gray-400 mt-2">{t('subtitle')}</p>
       </div>
-      <DashboardCharts data={demoData} />
+      <div className="mb-8">
+        <SurveySelector surveys={surveys} activeSurveyId={activeSurveyId} />
+      </div>
+      {analyticsData === null ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <p className="text-lg font-light text-gray-900">No responses yet</p>
+          <p className="text-sm text-gray-400 mt-2">
+            Send survey invitations and responses will appear here.
+          </p>
+        </div>
+      ) : (
+        <DashboardCharts data={analyticsData} />
+      )}
     </div>
   );
 }
