@@ -54,14 +54,13 @@ Exceptions:
 
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
-| Body | 14px | 400 (regular) | 1.5 | Form labels, table rows, modal body copy, helper text |
-| Label | 12px | 500 (medium) | 1.4 | Status badges, nav labels (collapsed), column headers |
-| Heading | 20px | 600 (semibold) | 1.2 | Page titles ("Surveys", "Settings"), modal headings |
+| Body | 14px | 400 (regular) | 1.5 | Form labels, table rows, modal body copy, helper text, status badges |
+| Heading | 20px | 600 (semibold) | 1.2 | Page titles ("Surveys", "Settings"), modal headings, column headers |
 | Display | 28px | 600 (semibold) | 1.15 | Empty state headlines only |
 
-Burmese overrides: same sizes and weights; font-family switches to Noto Sans Myanmar Variable via `.font-myanmar` class when locale is `my`. Line-height for Burmese body raises to 1.65 to accommodate Myanmar script descenders.
+Declared weights: 400 (regular) and 600 (semibold) only. Status badges use weight 400; badge differentiation is handled by background color, not weight. Column headers use weight 600 (heading role, reduced to 12px via font-size utility).
 
-Declared weights: 400 (regular) and 600 (semibold). 500 is used only for status badges (label role) as an intermediate — this stays within the 2-weight spirit since it appears only in non-body label contexts.
+Burmese overrides: same sizes and weights; font-family switches to Noto Sans Myanmar Variable via `.font-myanmar` class when locale is `my`. Line-height for Burmese body raises to 1.65 to accommodate Myanmar script descenders.
 
 ---
 
@@ -112,7 +111,7 @@ Components required for this phase, grouped by surface.
 | `<Input>` | shadcn/ui | Survey name field |
 | `<Textarea>` | shadcn/ui | Survey description field |
 | File upload drop zone | custom (HTML input[type=file]) | No third-party uploader; drag-over state with blue border |
-| Upload feedback row | custom | Filename + file size + remove icon (lucide: `X`) |
+| Upload feedback row | custom | Filename + file size + remove icon (lucide: `X`, `aria-label="Remove file"`) |
 | `<Button>` | shadcn/ui | "Create Survey" primary, "Cancel" outline |
 | `<Label>` | shadcn/ui | All form field labels |
 
@@ -204,9 +203,38 @@ Components required for this phase, grouped by surface.
 
 | Action | Trigger | Confirmation Approach | Copy |
 |--------|---------|----------------------|------|
-| Delete survey | "Delete" button in survey row actions | Inline confirmation row (not modal) — replaces row with "Are you sure? This cannot be undone." + "Delete" (destructive button) + "Cancel" (ghost) | Heading: "Delete this survey?" Body: "All associated questions and invitation links will be removed permanently." |
+| Delete survey | "Delete" button in survey row actions | Inline confirmation row (not modal) — replaces row with "Are you sure? This cannot be undone." + "Delete Survey" (destructive button) + "Cancel" (ghost) | Heading: "Delete this survey?" Body: "All associated questions and invitation links will be removed permanently." |
 
 No other destructive actions in this phase.
+
+---
+
+## Visual Hierarchy
+
+Eye entry point notes per surface — where the user's eye lands first and how attention flows.
+
+### Survey List Page (`/admin/surveys`)
+**Focal point:** The "New Survey" button (top-right, blue accent) is the primary focal point when surveys exist. It is the highest-contrast element on an otherwise neutral surface. Eye flow: button (top-right) → survey list rows (title column) → status badges (right column) → row actions ("View", "Delete").
+
+When no surveys exist, the focal point shifts to the empty-state heading "No surveys yet" (28px display, center-aligned) followed immediately by the "Create Your First Survey" CTA below it.
+
+### Survey Creation Form
+**Focal point:** The "Survey Name" input at the top of the form — it is the first focusable element and carries the `<Label>` + required indicator. Eye flow: name field → description textarea → file upload drop zone → "Create Survey" CTA (bottom-right).
+
+### Excel Import — Question Preview Table
+**Focal point:** The import result alert banner (success or error) displayed above the table after parsing. Eye flow: alert banner → question count in banner → table rows (English text column, widest) → type badges (right).
+
+### SMTP Settings Page
+**Focal point:** The "Host" field at the top of the form — it is the first required field and determines connection viability. Eye flow: host → port → username → password → "Save Settings" + "Send Test Email" button row.
+
+### SMTP Onboarding Modal
+**Focal point:** The modal heading "Set Up Email Delivery" (20px semibold, top of dialog). Eye flow: heading → body explanation → "Configure Now" CTA (primary, blue) → "Skip for Now" (ghost, lower visual weight).
+
+### Email Distribution Form
+**Focal point:** The survey `<Select>` dropdown — it gates the send action and sits at the top. Eye flow: survey select → email textarea → parsed count display ("12 email addresses found") → "Send Invitations" CTA.
+
+### Send Progress / Confirmation View
+**Focal point:** The progress indicator or result summary card fills the center of the screen, replacing the form entirely. Eye flow: status text ("Sending 3 of 12..." or "12 invitations sent successfully") → result detail → "Send Another Batch" button.
 
 ---
 
@@ -215,6 +243,7 @@ No other destructive actions in this phase.
 ### File Upload (Excel Import)
 - Drop zone accepts `.xlsx` and `.xls` MIME types only; reject others immediately with error copy above
 - On valid file drop or selection: show filename, file size, and lucide `FileSpreadsheet` icon in a row
+- The remove button in the upload feedback row renders as `<button aria-label="Remove file">` containing the lucide `X` icon; no visible text label is required
 - Upload state: replace drop zone with progress indicator (indeterminate spinner) while parsing with exceljs
 - On success: show question preview table below; "Import Questions" confirmation button appears
 - On failure: clear file selection, show inline error, re-enable drop zone
