@@ -493,7 +493,7 @@ function computePillarHeatmap(
   return { departments, pillars, cells, overallAverages };
 }
 
-export async function computeAnalytics(surveyId: string): Promise<DashboardData | null> {
+export async function computeAnalytics(surveyId: string, org?: string): Promise<DashboardData | null> {
   // Load responses from PostgreSQL
   const dbResponses = await db.select().from(schema.responses)
     .where(eq(schema.responses.surveyId, surveyId));
@@ -501,10 +501,15 @@ export async function computeAnalytics(surveyId: string): Promise<DashboardData 
   if (dbResponses.length === 0) return null;
 
   // Convert DB rows to flat answer records (same shape as old CSV rows)
-  const rows: Record<string, string>[] = dbResponses.map(r => {
+  const allRows: Record<string, string>[] = dbResponses.map(r => {
     const answers = r.answers as Record<string, string>;
     return { ...answers, email: r.email };
   });
+
+  // Apply org filter if specified
+  const rows = org ? allRows.filter(r => r['DEM-ORG'] === org) : allRows;
+
+  if (rows.length === 0) return null;
 
   const likertQuestions = GPTW_QUESTIONS.filter(q => q.type === 'likert');
 

@@ -1,11 +1,11 @@
 'use client';
 
 const LIKERT_OPTIONS = [
-  { value: '1', en: 'Strongly Disagree', my: 'လုံးဝမသဘောတူပါ' },
-  { value: '2', en: 'Disagree', my: 'မသဘောတူပါ' },
-  { value: '3', en: 'Neutral', my: 'ကြားနေ' },
-  { value: '4', en: 'Agree', my: 'သဘောတူပါသည်' },
-  { value: '5', en: 'Strongly Agree', my: 'လုံးဝသဘောတူပါသည်' },
+  { value: '1', emoji: '😡', en: 'Strongly Disagree', my: 'လုံးဝမသဘောတူပါ' },
+  { value: '2', emoji: '😟', en: 'Disagree', my: 'မသဘောတူပါ' },
+  { value: '3', emoji: '😐', en: 'Neutral', my: 'ကြားနေ' },
+  { value: '4', emoji: '😊', en: 'Agree', my: 'သဘောတူပါသည်' },
+  { value: '5', emoji: '🤩', en: 'Strongly Agree', my: 'လုံးဝသဘောတူပါသည်' },
 ];
 
 interface LikertInputProps {
@@ -65,7 +65,7 @@ export function LikertInput({
                   : 'bg-transparent text-muted-foreground border-border hover:border-foreground/20 hover:bg-muted/30'
               }`}
             >
-              {label}
+              <span className="mr-1">{option.emoji}</span>{label}
             </button>
           );
         })}
@@ -101,6 +101,7 @@ export function LikertInput({
               }`}>
                 {isSelected && <span className="w-2 h-2 rounded-full bg-background" />}
               </span>
+              <span className="text-lg">{option.emoji}</span>
               {label}
             </button>
           );

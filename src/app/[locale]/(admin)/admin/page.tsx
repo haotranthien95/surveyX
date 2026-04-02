@@ -3,14 +3,14 @@ import { getTranslations } from 'next-intl/server';
 import { CheckCircle2 } from 'lucide-react';
 import { cachedListSurveys, cachedComputeAnalytics } from '@/lib/cache';
 import { DashboardCharts } from '@/components/dashboard/DashboardCharts';
-import { SurveySelector } from '@/components/dashboard/SurveySelector';
+import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
 
 export default async function AdminDashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ survey?: string }>;
+  searchParams: Promise<{ survey?: string; org?: string }>;
 }) {
-  const [t, { survey: surveyId }] = await Promise.all([
+  const [t, { survey: surveyId, org }] = await Promise.all([
     getTranslations('dashboard'),
     searchParams,
   ]);
@@ -54,11 +54,14 @@ export default async function AdminDashboardPage({
     );
   }
 
-  const activeSurveyId = surveyId ?? surveys[0]?.id;
+  // Default to latest active survey (listSurveys returns ascending by createdAt)
+  const activeSurveyId = surveyId
+    ?? surveys.filter(s => s.status === 'active').at(-1)?.id
+    ?? surveys.at(-1)?.id;
 
-  // Cached analytics — heavy computation cached for 60s
+  // Cached analytics — heavy computation cached for 60s, with optional org filter
   const analyticsData = activeSurveyId
-    ? await cachedComputeAnalytics(activeSurveyId)
+    ? await cachedComputeAnalytics(activeSurveyId, org)
     : null;
 
   return (
@@ -68,7 +71,7 @@ export default async function AdminDashboardPage({
         <p className="text-sm text-gray-400 mt-2">{t('subtitle')}</p>
       </div>
       <div className="mb-8">
-        <SurveySelector surveys={surveys} activeSurveyId={activeSurveyId} />
+        <DashboardFilters surveys={surveys} activeSurveyId={activeSurveyId} />
       </div>
       {analyticsData === null ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
