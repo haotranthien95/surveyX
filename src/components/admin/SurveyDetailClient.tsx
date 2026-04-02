@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { ManualQuestionEditor } from '@/components/admin/ManualQuestionEditor';
 import { SurveyMetrics } from '@/components/admin/SurveyMetrics';
 import { useUpdateSurvey, useDeleteSurvey } from '@/hooks/use-surveys';
@@ -20,6 +21,7 @@ interface SurveyDetailClientProps {
   responseCount: number;
   tokenCount: number;
   previewToken: string;
+  surveys: { id: string; name: string }[];
 }
 
 function StatusBadge({ status }: { status: Survey['status'] }) {
@@ -34,7 +36,7 @@ function TypeBadge({ type }: { type: Question['type'] }) {
   return <Badge variant="outline" className="text-[11px]">Demographic</Badge>;
 }
 
-export function SurveyDetailClient({ survey: initialSurvey, questions: initialQuestions, responseCount, tokenCount, previewToken }: SurveyDetailClientProps) {
+export function SurveyDetailClient({ survey: initialSurvey, questions: initialQuestions, responseCount, tokenCount, previewToken, surveys }: SurveyDetailClientProps) {
   const t = useTranslations('surveys');
   const router = useRouter();
   const locale = useLocale();
@@ -88,6 +90,20 @@ export function SurveyDetailClient({ survey: initialSurvey, questions: initialQu
 
   return (
     <div className="p-6">
+      {/* Survey switcher dropdown */}
+      <div className="mb-6">
+        <Select value={survey.id} onValueChange={(id) => { if (id) router.push(`/${locale}/admin/surveys/${id}`); }}>
+          <SelectTrigger className="w-72">
+            <span className="truncate">{surveys.find(s => s.id === survey.id)?.name || survey.name}</span>
+          </SelectTrigger>
+          <SelectContent>
+            {surveys.map(s => (
+              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Back */}
       <Link
         href="../surveys"
