@@ -22,9 +22,22 @@ import { FadeIn } from '@/components/motion/FadeIn';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 // DIMENSION_COLORS no longer used directly — performance zones handle coloring
 import { ErrorBoundary } from './ErrorBoundary';
-import type { DashboardData } from '@/lib/types/analytics';
+import { EESTrendChart } from '@/components/charts/EESTrendChart';
+import { SubPillarBreakdownChart } from '@/components/charts/SubPillarBreakdownChart';
+import { LeadershipConfidenceChart } from '@/components/charts/LeadershipConfidenceChart';
+import { RelationshipStatementsChart } from '@/components/charts/RelationshipStatementsChart';
+import { InternalBenchmarkChart } from '@/components/charts/InternalBenchmarkChart';
+import { IndustryBenchmarkChart } from '@/components/charts/IndustryBenchmarkChart';
+import type { DashboardData, MultiSurveyData } from '@/lib/types/analytics';
 
-export function DashboardCharts({ data }: { data: DashboardData }) {
+interface DashboardChartsProps {
+  data: DashboardData;
+  multiSurvey?: MultiSurveyData;
+}
+
+export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
+  const emptyMultiSurvey: MultiSurveyData = { surveys: [] };
+  const multiSurveyData = multiSurvey ?? emptyMultiSurvey;
   return (
     <ChartProvider>
       <div className="space-y-10">
@@ -62,6 +75,18 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
             {/* ── OVERVIEW TAB ──────────────────────────────────────── */}
             <TabsContent value="overview" className="mt-0 space-y-8">
 
+              {/* EES Trend — full width */}
+              {multiSurveyData.surveys.length > 0 && (
+                <ErrorBoundary>
+                  <ChartSection
+                    title="Annual EES Trend"
+                    description="Employee Engagement Score and GPTW satisfaction across all survey years"
+                  >
+                    <EESTrendChart data={multiSurveyData} />
+                  </ChartSection>
+                </ErrorBoundary>
+              )}
+
               {/* Dimensions + Sentiment */}
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 <div className="lg:col-span-3">
@@ -79,6 +104,16 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
                   </ErrorBoundary>
                 </div>
               </div>
+
+              {/* Industry Benchmark — full width */}
+              <ErrorBoundary>
+                <ChartSection
+                  title="Industry Benchmark"
+                  description="Our scores vs GPTW Best Workplaces 2024–2025 averages — gap annotations on our score bars"
+                >
+                  <IndustryBenchmarkChart data={data.industryBenchmark} />
+                </ChartSection>
+              </ErrorBoundary>
 
               {/* Relationship Radar + Rankings */}
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -141,7 +176,27 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
                 </div>
               </ErrorBoundary>
 
-              {/* Leadership Comparison + eNPS Detail */}
+              {/* Sub-Pillar Breakdown — full width, after heatmap */}
+              <ErrorBoundary>
+                <ChartSection
+                  title="Sub-Pillar Deep Dive"
+                  description="15 sub-pillars grouped by dimension — click any section to expand or collapse"
+                >
+                  <SubPillarBreakdownChart data={data.subPillarScores} />
+                </ChartSection>
+              </ErrorBoundary>
+
+              {/* Relationship Statements — full width */}
+              <ErrorBoundary>
+                <ChartSection
+                  title="Relationship Statements"
+                  description="Per-statement scores grouped by the 3 relationship axes — select a tab to explore each axis"
+                >
+                  <RelationshipStatementsChart data={data.relationshipStatements} />
+                </ChartSection>
+              </ErrorBoundary>
+
+              {/* Leadership Confidence + Leadership Comparison side by side */}
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 <div className="lg:col-span-3">
                   <ErrorBoundary>
@@ -157,6 +212,21 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
                 <div className="lg:col-span-2">
                   <ErrorBoundary>
                     <ChartSection
+                      title="Confidence in Leadership"
+                      description="5 Credibility statements measuring trust in leadership"
+                      height={300}
+                    >
+                      <LeadershipConfidenceChart data={data.leadershipConfidence} />
+                    </ChartSection>
+                  </ErrorBoundary>
+                </div>
+              </div>
+
+              {/* eNPS Detail */}
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <div className="lg:col-span-3">
+                  <ErrorBoundary>
+                    <ChartSection
                       title="eNPS — Loyalty Score"
                       description="Computed from the 2 endorsement statements (PRI-31 + PRI-35)"
                       height={340}
@@ -165,10 +235,8 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
                     </ChartSection>
                   </ErrorBoundary>
                 </div>
-              </div>
 
-              {/* Legacy ENPS reference */}
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                {/* Legacy ENPS reference */}
                 <div className="lg:col-span-2">
                   <ErrorBoundary>
                     <ChartSection title="Overall NPS (legacy)" description="Based on single statement UNC-47">
@@ -181,6 +249,18 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
 
             {/* ── WORKFORCE INSIGHTS TAB ────────────────────────────── */}
             <TabsContent value="workforce" className="mt-0 space-y-8">
+
+              {/* Internal Benchmark — full width, before tenure journey */}
+              {multiSurveyData.surveys.length >= 2 && (
+                <ErrorBoundary>
+                  <ChartSection
+                    title="Internal Benchmark"
+                    description="Dimension scores compared across all survey years — track improvement over time"
+                  >
+                    <InternalBenchmarkChart data={multiSurveyData} />
+                  </ChartSection>
+                </ErrorBoundary>
+              )}
 
               {/* Tenure Journey */}
               <ErrorBoundary>

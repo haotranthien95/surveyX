@@ -1,6 +1,6 @@
 import { unstable_cache } from 'next/cache';
 import { listSurveys, getSurvey, getQuestions, getResponseCount } from '@/lib/services/survey.service';
-import { computeAnalytics } from '@/lib/services/analytics.service';
+import { computeAnalytics, computeMultiSurveyAnalytics, getDistinctDepartments } from '@/lib/services/analytics.service';
 import { getSmtpSettings } from '@/lib/services/smtp.service';
 import { listTokens, countSurveyTokens } from '@/lib/services/token.service';
 
@@ -46,10 +46,18 @@ export const cachedGetResponseCount = (surveyId: string) =>
   )();
 
 // Analytics — heavy computation, cache for 60s
-export const cachedComputeAnalytics = (surveyId: string, org?: string) =>
+export const cachedComputeAnalytics = (surveyId: string, org?: string, dept?: string) =>
   unstable_cache(
-    async () => computeAnalytics(surveyId, org),
-    [`analytics-${surveyId}-${org ?? 'all'}`],
+    async () => computeAnalytics(surveyId, org, dept),
+    [`analytics-${surveyId}-${org ?? 'all'}-${dept ?? 'all'}`],
+    { revalidate: 60, tags: [CACHE_TAGS.analytics(surveyId)] }
+  )();
+
+// Distinct departments for a survey
+export const cachedGetDistinctDepartments = (surveyId: string) =>
+  unstable_cache(
+    async () => getDistinctDepartments(surveyId),
+    [`departments-${surveyId}`],
     { revalidate: 60, tags: [CACHE_TAGS.analytics(surveyId)] }
   )();
 
@@ -74,4 +82,12 @@ export const cachedCountTokens = (surveyId: string) =>
     async () => countSurveyTokens(surveyId),
     [`token-count-${surveyId}`],
     { revalidate: 15, tags: [CACHE_TAGS.tokens(surveyId)] }
+  )();
+
+// Multi-survey analytics — cross-survey trend, 120s TTL
+export const cachedMultiSurveyAnalytics = (org?: string) =>
+  unstable_cache(
+    async () => computeMultiSurveyAnalytics(org),
+    [`multi-survey-analytics-${org ?? 'all'}`],
+    { revalidate: 120, tags: [CACHE_TAGS.surveys] }
   )();

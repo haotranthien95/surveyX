@@ -11,6 +11,9 @@ import {
   ENPS_STATEMENT_IDS,
   type Relationship,
 } from '@/lib/diagnostic-framework';
+import { listSurveys } from '@/lib/services/survey.service';
+import { PILLAR_DIMENSIONS } from '@/lib/diagnostic-framework';
+import { INDUSTRY_BENCHMARKS } from '@/lib/performance-zones';
 import type {
   DashboardData,
   DepartmentBreakdownData,
@@ -23,6 +26,12 @@ import type {
   SentimentAnalysisData,
   OpenEndedSentiment,
   PillarHeatmapData,
+  SubPillarScore,
+  RelationshipStatementBreakdown,
+  LeadershipConfidenceData,
+  IndustryBenchmarkData,
+  MultiSurveyData,
+  SurveySummary,
 } from '@/lib/types/analytics';
 
 const ANONYMITY_THRESHOLD = 5;
@@ -493,7 +502,229 @@ function computePillarHeatmap(
   return { departments, pillars, cells, overallAverages };
 }
 
-export async function computeAnalytics(surveyId: string, org?: string): Promise<DashboardData | null> {
+// ── Phase 3 computations ─────────────────────────────────────────────────────
+
+function computeSubPillarScores(rows: Record<string, string>[]): SubPillarScore[] {
+  const results: SubPillarScore[] = [];
+
+  for (const dim of SCORED_DIMENSIONS) {
+    const dimDisplay = DIMENSION_DISPLAY[dim];
+    const subPillarsConfig = PILLAR_DIMENSIONS[dim]?.subPillars ?? [];
+    const subPillarNames = subPillarsConfig.map(sp => sp.name);
+
+    for (const spName of subPillarNames) {
+      const qs = GPTW_QUESTIONS.filter(
+        q => q.type === 'likert' && q.dimension === dim && q.subPillar === spName
+      );
+      if (qs.length === 0) continue;
+
+      if (rows.length < ANONYMITY_THRESHOLD) {
+        results.push({ dimension: dimDisplay, subPillar: spName, score: 0, questionCount: qs.length });
+        continue;
+      }
+
+      const scores = qs.map(q => favorableScore(rows, q.id));
+      const mean = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+      results.push({ dimension: dimDisplay, subPillar: spName, score: mean, questionCount: qs.length });
+    }
+  }
+
+  return results;
+}
+
+function computeRelationshipStatements(
+  rows: Record<string, string>[],
+  questionScoreMap: Record<string, number>
+): RelationshipStatementBreakdown[] {
+  const relationshipKeys: Relationship[] = ['colleagues', 'job', 'management'];
+
+  return relationshipKeys.map(rel => {
+    const matchingQuestions = GPTW_QUESTIONS.filter(
+      q => q.type === 'likert' && QUESTION_RELATIONSHIP_MAP[q.id] === rel
+    );
+
+    const statements = matchingQuestions.map(q => ({
+      id: q.id,
+      label: q.en.length > 70 ? q.en.substring(0, 70) + '…' : q.en,
+      score: rows.length >= ANONYMITY_THRESHOLD ? (questionScoreMap[q.id] ?? 0) : 0,
+    }));
+
+    const scores = statements.map(s => s.score);
+    const averageScore = scores.length > 0
+      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+      : 0;
+
+    return {
+      relationship: RELATIONSHIP_LABELS[rel],
+      key: rel,
+      statements,
+      averageScore,
+    };
+  });
+}
+
+function computeLeadershipConfidence(
+  rows: Record<string, string>[],
+  questionScoreMap: Record<string, number>
+): LeadershipConfidenceData {
+  const leadershipIds = ['CRE-09', 'CRE-10', 'CRE-12', 'CRE-13', 'CRE-15'];
+
+  const statementLabels: Record<string, string> = {
+    'CRE-09': 'Leaders embody the best characteristics of our company',
+    'CRE-10': 'Led by people who operate with integrity and keep promises',
+    'CRE-12': 'Kept in the loop on important changes; safe to ask tough questions',
+    'CRE-13': 'Clear on company vision; confident in how the business is run',
+    'CRE-15': 'Confident in the talent and character of people hired',
+  };
+
+  const statements = leadershipIds.map(id => ({
+    id,
+    label: statementLabels[id] ?? id,
+    score: rows.length >= ANONYMITY_THRESHOLD ? (questionScoreMap[id] ?? 0) : 0,
+  }));
+
+  const overallScore = statements.length > 0
+    ? Math.round(statements.reduce((a, b) => a + b.score, 0) / statements.length)
+    : 0;
+
+  return { overallScore, statements };
+}
+
+function computeIndustryBenchmark(
+  dimensionScoreMap: Record<string, number>,
+  eesScore: number,
+  gptwScore: number,
+  enpsScore: number
+): IndustryBenchmarkData {
+  const dimensions = SCORED_DIMENSIONS.map(dim => {
+    const name = DIMENSION_DISPLAY[dim];
+    const score = dimensionScoreMap[dim] ?? 0;
+    const benchmark = INDUSTRY_BENCHMARKS[name] ?? 78;
+    return { name, score, benchmark, gap: score - benchmark };
+  });
+
+  const overall = [
+    {
+      name: 'EES',
+      score: eesScore,
+      benchmark: INDUSTRY_BENCHMARKS['EES'] ?? 80,
+      gap: eesScore - (INDUSTRY_BENCHMARKS['EES'] ?? 80),
+    },
+    {
+      name: 'GPTW',
+      score: gptwScore,
+      benchmark: INDUSTRY_BENCHMARKS['GPTW'] ?? 85,
+      gap: gptwScore - (INDUSTRY_BENCHMARKS['GPTW'] ?? 85),
+    },
+    {
+      name: 'ENPS',
+      score: enpsScore,
+      benchmark: INDUSTRY_BENCHMARKS['ENPS'] ?? 70,
+      gap: enpsScore - (INDUSTRY_BENCHMARKS['ENPS'] ?? 70),
+    },
+  ];
+
+  return { dimensions, overall };
+}
+
+export async function computeMultiSurveyAnalytics(org?: string): Promise<MultiSurveyData> {
+  // Load all surveys sorted chronologically
+  const allSurveys = await listSurveys();
+  if (allSurveys.length === 0) return { surveys: [] };
+
+  const summaries: SurveySummary[] = [];
+
+  for (const survey of allSurveys) {
+    const dbResponses = await db.select().from(schema.responses)
+      .where(eq(schema.responses.surveyId, survey.id));
+
+    if (dbResponses.length === 0) continue;
+
+    const allRows: Record<string, string>[] = dbResponses.map(r => {
+      const answers = r.answers as Record<string, string>;
+      return { ...answers, email: r.email };
+    });
+
+    const rows = org ? allRows.filter(r => r['DEM-ORG'] === org) : allRows;
+    if (rows.length < ANONYMITY_THRESHOLD) continue;
+
+    const likertQuestions = GPTW_QUESTIONS.filter(q => q.type === 'likert');
+
+    const questionScoreMap: Record<string, number> = {};
+    for (const q of likertQuestions) {
+      questionScoreMap[q.id] = favorableScore(rows, q.id);
+    }
+
+    const allScores = Object.values(questionScoreMap);
+    const eesScore = allScores.length > 0
+      ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)
+      : 0;
+
+    const gptwScore = questionScoreMap['UNC-47'] ?? 0;
+
+    const dimensionScores: { dimension: string; score: number }[] = SCORED_DIMENSIONS.map(dim => {
+      const dimQs = likertQuestions.filter(q => q.dimension === dim);
+      const scores = dimQs.map(q => questionScoreMap[q.id]);
+      const mean = scores.length > 0
+        ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+        : 0;
+      return { dimension: DIMENSION_DISPLAY[dim], score: mean };
+    });
+
+    // eNPS from UNC-47
+    const enpsData = computeENPS(rows);
+
+    // Relationship scores
+    const relKeys: Relationship[] = ['colleagues', 'job', 'management'];
+    const relationships = relKeys.map(rel => {
+      const qs = GPTW_QUESTIONS.filter(
+        q => q.type === 'likert' && QUESTION_RELATIONSHIP_MAP[q.id] === rel
+      );
+      const scores = qs.map(q => questionScoreMap[q.id] ?? 0);
+      const score = scores.length > 0
+        ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+        : 0;
+      return { key: rel, score };
+    });
+
+    // Extract year from survey name or fall back to createdAt year
+    const createdYear = new Date(survey.createdAt).getFullYear();
+    const nameYearMatch = survey.name.match(/\b(20\d{2})\b/);
+    const year = nameYearMatch ? parseInt(nameYearMatch[1], 10) : createdYear;
+
+    summaries.push({
+      surveyId: survey.id,
+      surveyName: survey.name,
+      year,
+      eesScore,
+      gptwScore,
+      enps: enpsData.score,
+      dimensions: dimensionScores,
+      relationships,
+    });
+  }
+
+  // Sort chronologically
+  summaries.sort((a, b) => a.year - b.year || a.surveyName.localeCompare(b.surveyName));
+
+  return { surveys: summaries };
+}
+
+export async function getDistinctDepartments(surveyId: string): Promise<string[]> {
+  const dbResponses = await db.select({ answers: schema.responses.answers })
+    .from(schema.responses)
+    .where(eq(schema.responses.surveyId, surveyId));
+
+  const depts = new Set<string>();
+  for (const r of dbResponses) {
+    const answers = r.answers as Record<string, string>;
+    const dept = answers['__department__'];
+    if (dept && dept.trim()) depts.add(dept.trim());
+  }
+  return Array.from(depts).sort();
+}
+
+export async function computeAnalytics(surveyId: string, org?: string, dept?: string): Promise<DashboardData | null> {
   // Load responses from PostgreSQL
   const dbResponses = await db.select().from(schema.responses)
     .where(eq(schema.responses.surveyId, surveyId));
@@ -506,8 +737,9 @@ export async function computeAnalytics(surveyId: string, org?: string): Promise<
     return { ...answers, email: r.email };
   });
 
-  // Apply org filter if specified
-  const rows = org ? allRows.filter(r => r['DEM-ORG'] === org) : allRows;
+  // Apply org and department filters
+  let rows = org ? allRows.filter(r => r['DEM-ORG'] === org) : allRows;
+  if (dept) rows = rows.filter(r => (r['__department__'] ?? '').trim() === dept);
 
   if (rows.length === 0) return null;
 
@@ -628,6 +860,12 @@ export async function computeAnalytics(surveyId: string, org?: string): Promise<
   const sentimentAnalysis = computeSentimentAnalysis(rows);
   const pillarHeatmap = computePillarHeatmap(rows, dimensionScoreMap);
 
+  // Phase 3 computations
+  const subPillarScores = computeSubPillarScores(rows);
+  const relationshipStatements = computeRelationshipStatements(rows, questionScoreMap);
+  const leadershipConfidence = computeLeadershipConfidence(rows, questionScoreMap);
+  const industryBenchmark = computeIndustryBenchmark(dimensionScoreMap, eesScore, gptwScore, enps.score);
+
   return {
     eesScore,
     eesTrend: 0,
@@ -650,5 +888,10 @@ export async function computeAnalytics(surveyId: string, org?: string): Promise<
     earlyWarningAlerts,
     sentimentAnalysis,
     pillarHeatmap,
+    // Phase 3
+    subPillarScores,
+    relationshipStatements,
+    leadershipConfidence,
+    industryBenchmark,
   };
 }

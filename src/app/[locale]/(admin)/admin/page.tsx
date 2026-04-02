@@ -1,16 +1,17 @@
 // src/app/[locale]/(admin)/admin/page.tsx
 import { getTranslations } from 'next-intl/server';
 import { CheckCircle2 } from 'lucide-react';
-import { cachedListSurveys, cachedComputeAnalytics } from '@/lib/cache';
+import { cachedListSurveys, cachedComputeAnalytics, cachedMultiSurveyAnalytics, cachedGetDistinctDepartments } from '@/lib/cache';
 import { DashboardCharts } from '@/components/dashboard/DashboardCharts';
 import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
+import { ExportButtons } from '@/components/dashboard/ExportButtons';
 
 export default async function AdminDashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ survey?: string; org?: string }>;
+  searchParams: Promise<{ survey?: string; org?: string; dept?: string }>;
 }) {
-  const [t, { survey: surveyId, org }] = await Promise.all([
+  const [t, { survey: surveyId, org, dept }] = await Promise.all([
     getTranslations('dashboard'),
     searchParams,
   ]);
@@ -59,10 +60,22 @@ export default async function AdminDashboardPage({
     ?? surveys.filter(s => s.status === 'active').at(-1)?.id
     ?? surveys.at(-1)?.id;
 
-  // Cached analytics — heavy computation cached for 60s, with optional org filter
-  const analyticsData = activeSurveyId
-    ? await cachedComputeAnalytics(activeSurveyId, org)
-    : null;
+  // Load analytics + multi-survey data + departments in parallel
+  const [analyticsData, multiSurveyData, departments] = await Promise.all([
+    activeSurveyId ? cachedComputeAnalytics(activeSurveyId, org, dept) : Promise.resolve(null),
+    cachedMultiSurveyAnalytics(org),
+    activeSurveyId ? cachedGetDistinctDepartments(activeSurveyId) : Promise.resolve([]),
+  ]);
+
+  // Compute eesTrend from multi-survey delta
+  let eesTrend = 0;
+  if (analyticsData && activeSurveyId) {
+    const currentIdx = multiSurveyData.surveys.findIndex(s => s.surveyId === activeSurveyId);
+    if (currentIdx > 0) {
+      eesTrend = analyticsData.eesScore - multiSurveyData.surveys[currentIdx - 1].eesScore;
+    }
+  }
+  const analyticsWithTrend = analyticsData ? { ...analyticsData, eesTrend } : null;
 
   return (
     <div className="p-8">
@@ -71,9 +84,9 @@ export default async function AdminDashboardPage({
         <p className="text-sm text-gray-400 mt-2">{t('subtitle')}</p>
       </div>
       <div className="mb-8">
-        <DashboardFilters surveys={surveys} activeSurveyId={activeSurveyId} />
+        <DashboardFilters surveys={surveys} activeSurveyId={activeSurveyId} deptOptions={departments} />
       </div>
-      {analyticsData === null ? (
+      {analyticsWithTrend === null ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <p className="text-lg font-light text-gray-900">No responses yet</p>
           <p className="text-sm text-gray-400 mt-2">
@@ -81,7 +94,7 @@ export default async function AdminDashboardPage({
           </p>
         </div>
       ) : (
-        <DashboardCharts data={analyticsData} />
+        <DashboardCharts data={analyticsWithTrend} multiSurvey={multiSurveyData} />
       )}
     </div>
   );
