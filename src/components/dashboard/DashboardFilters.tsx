@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { type ReactNode, Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
@@ -15,11 +15,12 @@ interface DashboardFiltersProps {
   activeSurveyId: string | undefined;
   orgOptions?: string[];
   deptOptions?: string[];
+  exportButtons?: ReactNode;
 }
 
 const DEFAULT_ORG_OPTIONS = ['Wave Money', 'Yoma Bank'];
 
-function DashboardFiltersInner({ surveys, activeSurveyId, orgOptions = DEFAULT_ORG_OPTIONS, deptOptions = [] }: DashboardFiltersProps) {
+function DashboardFiltersInner({ surveys, activeSurveyId, orgOptions = DEFAULT_ORG_OPTIONS, deptOptions = [], exportButtons }: DashboardFiltersProps) {
   const t = useTranslations('dashboard');
   const router = useRouter();
   const pathname = usePathname();
@@ -39,23 +40,14 @@ function DashboardFiltersInner({ surveys, activeSurveyId, orgOptions = DEFAULT_O
   }
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      {/* Survey selector */}
-      <Select value={activeSurveyId ?? ''} onValueChange={(v) => v && updateParam('survey', v)}>
-        <SelectTrigger className="w-64">
-          <span className="truncate">
-            {surveys.find(s => s.id === activeSurveyId)?.name || t('selectSurvey')}
-          </span>
-        </SelectTrigger>
-        <SelectContent>
-          {surveys.map(s => (
-            <SelectItem key={s.id} value={s.id}>
-              {s.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className="flex flex-col gap-3 w-full">
+      {/* Survey title */}
+      <h2 className="text-xl font-semibold truncate">
+        {surveys.find(s => s.id === activeSurveyId)?.name || t('selectSurvey')}
+      </h2>
 
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
       {/* Organization filter */}
       <Select value={activeOrg || '__all__'} onValueChange={(v) => updateParam('org', v)}>
         <SelectTrigger className="w-48">
@@ -89,6 +81,9 @@ function DashboardFiltersInner({ surveys, activeSurveyId, orgOptions = DEFAULT_O
           ))}
         </SelectContent>
       </Select>
+        </div>
+        {exportButtons}
+      </div>
     </div>
   );
 }

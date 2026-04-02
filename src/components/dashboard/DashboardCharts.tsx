@@ -71,7 +71,7 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
             <TabsContent value="overview" className="mt-0 space-y-8">
 
               {/* EES Trend — full width */}
-              {multiSurveyData.surveys.length > 0 && (
+              {multiSurveyData.surveys.length > 1 && (
                 <ErrorBoundary>
                   <ChartSection
                     title={t('sectionEESTrend')}
