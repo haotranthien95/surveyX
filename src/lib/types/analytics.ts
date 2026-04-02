@@ -138,6 +138,9 @@ export interface SubPillarScore {
   dimension: string;    // e.g. 'Credibility'
   subPillar: string;    // e.g. 'Communication'
   score: number;        // % favorable
+  negative: number;     // % responses 1-2
+  neutral: number;      // % responses 3
+  positive: number;     // % responses 4-5
   questionCount: number;
 }
 

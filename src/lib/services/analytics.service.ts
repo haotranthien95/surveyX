@@ -519,13 +519,32 @@ function computeSubPillarScores(rows: Record<string, string>[]): SubPillarScore[
       if (qs.length === 0) continue;
 
       if (rows.length < ANONYMITY_THRESHOLD) {
-        results.push({ dimension: dimDisplay, subPillar: spName, score: 0, questionCount: qs.length });
+        results.push({ dimension: dimDisplay, subPillar: spName, score: 0, negative: 0, neutral: 0, positive: 0, questionCount: qs.length });
         continue;
+      }
+
+      // Collect all valid answers across sub-pillar questions
+      let totalAnswers = 0;
+      let negCount = 0;
+      let neuCount = 0;
+      let posCount = 0;
+      for (const q of qs) {
+        for (const r of rows) {
+          const v = r[q.id];
+          if (v === undefined || v === '') continue;
+          totalAnswers++;
+          if (v === '1' || v === '2') negCount++;
+          else if (v === '3') neuCount++;
+          else if (v === '4' || v === '5') posCount++;
+        }
       }
 
       const scores = qs.map(q => favorableScore(rows, q.id));
       const mean = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-      results.push({ dimension: dimDisplay, subPillar: spName, score: mean, questionCount: qs.length });
+      const negative = totalAnswers > 0 ? Math.round((negCount / totalAnswers) * 100) : 0;
+      const neutral = totalAnswers > 0 ? Math.round((neuCount / totalAnswers) * 100) : 0;
+      const positive = totalAnswers > 0 ? Math.round((posCount / totalAnswers) * 100) : 0;
+      results.push({ dimension: dimDisplay, subPillar: spName, score: mean, negative, neutral, positive, questionCount: qs.length });
     }
   }
 
