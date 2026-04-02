@@ -242,7 +242,7 @@ export function SurveyForm({ survey, questions, tokenRow, locale, translations }
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      {lang.toUpperCase()}
+                      {'en' === lang ? 'EN' : 'MM'}
                     </button>
                   ))}
                 </div>
