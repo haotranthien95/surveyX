@@ -46,10 +46,10 @@ export const cachedGetResponseCount = (surveyId: string) =>
   )();
 
 // Analytics — heavy computation, cache for 60s
-export const cachedComputeAnalytics = (surveyId: string) =>
+export const cachedComputeAnalytics = (surveyId: string, org?: string) =>
   unstable_cache(
-    async () => computeAnalytics(surveyId),
-    [`analytics-${surveyId}`],
+    async () => computeAnalytics(surveyId, org),
+    [`analytics-${surveyId}-${org ?? 'all'}`],
     { revalidate: 60, tags: [CACHE_TAGS.analytics(surveyId)] }
   )();
 
