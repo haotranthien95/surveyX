@@ -34,6 +34,8 @@ export async function GET() {
       fromAddress: settings.fromAddress,
       fromName: settings.fromName,
     },
+  }, {
+    headers: { 'Cache-Control': 'private, max-age=120, s-maxage=0' },
   });
 }
 

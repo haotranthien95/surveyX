@@ -24,7 +24,9 @@ export async function GET(
   const { id } = await params;
   const survey = await getSurvey(id);
   if (!survey) return Response.json({ error: 'Not found' }, { status: 404 });
-  return Response.json({ survey });
+  return Response.json({ survey }, {
+    headers: { 'Cache-Control': 'private, max-age=60, s-maxage=0' },
+  });
 }
 
 export async function PATCH(

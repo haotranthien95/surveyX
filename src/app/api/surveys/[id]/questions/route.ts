@@ -25,7 +25,9 @@ export async function GET(
   }
   const { id } = await params;
   const questions = await getQuestions(id);
-  return Response.json({ questions });
+  return Response.json({ questions }, {
+    headers: { 'Cache-Control': 'private, max-age=60, s-maxage=0' },
+  });
 }
 
 export async function POST(

@@ -14,27 +14,27 @@ export const CACHE_TAGS = {
   smtp: 'smtp',
 } as const;
 
-// Survey list — revalidate every 30s or on mutation
+// Survey list — revalidate every 5min or on mutation
 export const cachedListSurveys = unstable_cache(
   async () => listSurveys(),
   ['surveys-list'],
-  { revalidate: 30, tags: [CACHE_TAGS.surveys] }
+  { revalidate: 300, tags: [CACHE_TAGS.surveys] }
 );
 
-// Single survey
+// Single survey — metadata rarely changes, 5min TTL
 export const cachedGetSurvey = (id: string) =>
   unstable_cache(
     async () => getSurvey(id),
     [`survey-${id}`],
-    { revalidate: 60, tags: [CACHE_TAGS.survey(id)] }
+    { revalidate: 300, tags: [CACHE_TAGS.survey(id)] }
   )();
 
-// Questions for a survey
+// Questions — immutable after publish, 10min TTL
 export const cachedGetQuestions = (surveyId: string) =>
   unstable_cache(
     async () => getQuestions(surveyId),
     [`questions-${surveyId}`],
-    { revalidate: 60, tags: [CACHE_TAGS.questions(surveyId)] }
+    { revalidate: 600, tags: [CACHE_TAGS.questions(surveyId)] }
   )();
 
 // Response count
@@ -53,12 +53,12 @@ export const cachedComputeAnalytics = (surveyId: string, org?: string, dept?: st
     { revalidate: 60, tags: [CACHE_TAGS.analytics(surveyId)] }
   )();
 
-// Distinct departments for a survey
+// Distinct departments — rarely changes, 1h TTL
 export const cachedGetDistinctDepartments = (surveyId: string) =>
   unstable_cache(
     async () => getDistinctDepartments(surveyId),
     [`departments-${surveyId}`],
-    { revalidate: 60, tags: [CACHE_TAGS.analytics(surveyId)] }
+    { revalidate: 3600, tags: [CACHE_TAGS.analytics(surveyId)] }
   )();
 
 // SMTP settings

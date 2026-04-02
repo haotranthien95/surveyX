@@ -1,7 +1,6 @@
 // src/app/[locale]/(admin)/admin/surveys/[id]/invite/page.tsx
 import { redirect } from 'next/navigation';
-import { getSurvey, listSurveys } from '@/lib/services/survey.service';
-import { listTokens } from '@/lib/services/token.service';
+import { cachedGetSurvey, cachedListSurveys, cachedListTokens } from '@/lib/cache';
 import { EmailDistributionForm } from '@/components/admin/EmailDistributionForm';
 
 export default async function InvitePage({
@@ -12,9 +11,9 @@ export default async function InvitePage({
   const { id, locale } = await params;
 
   const [survey, surveys, priorInvitations] = await Promise.all([
-    getSurvey(id),
-    listSurveys(),
-    listTokens(id),
+    cachedGetSurvey(id),
+    cachedListSurveys(),
+    cachedListTokens(id),
   ]);
 
   if (!survey) {

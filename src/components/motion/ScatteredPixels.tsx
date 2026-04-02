@@ -2,20 +2,17 @@
 
 import { useEffect, useRef } from 'react';
 
-interface Pixel {
+interface Line {
   x: number;
   y: number;
-  size: number;
+  length: number;
+  angle: number;
   opacity: number;
-  vx: number;
-  vy: number;
-  life: number;
-  maxLife: number;
+  thickness: number;
 }
 
 export function ScatteredPixels() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animRef = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -23,89 +20,59 @@ export function ScatteredPixels() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Check reduced motion
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
     let w = window.innerWidth;
     let h = window.innerHeight;
     canvas.width = w;
     canvas.height = h;
+
+    function createLines(width: number, height: number): Line[] {
+      const count = Math.floor((width * height) / 4000);
+      const lines: Line[] = [];
+      for (let i = 0; i < count; i++) {
+        // Bias toward right 60% and top 70%
+        const biasRight = Math.random() < 0.65;
+        const biasTop = Math.random() < 0.6;
+        lines.push({
+          x: biasRight ? width * 0.4 + Math.random() * width * 0.6 : Math.random() * width,
+          y: biasTop ? Math.random() * height * 0.7 : Math.random() * height,
+          length: Math.random() * 8 + 3,
+          angle: Math.random() * Math.PI,
+          opacity: Math.random() * 0.12 + 0.02,
+          thickness: Math.random() < 0.2 ? 1.5 : 0.5 + Math.random() * 0.5,
+        });
+      }
+      return lines;
+    }
+
+    function drawLines(lines: Line[]) {
+      ctx!.clearRect(0, 0, w, h);
+      for (const l of lines) {
+        const dx = Math.cos(l.angle) * l.length * 0.5;
+        const dy = Math.sin(l.angle) * l.length * 0.5;
+        ctx!.beginPath();
+        ctx!.moveTo(l.x - dx, l.y - dy);
+        ctx!.lineTo(l.x + dx, l.y + dy);
+        ctx!.strokeStyle = `rgba(150, 150, 150, ${l.opacity})`;
+        ctx!.lineWidth = l.thickness;
+        ctx!.lineCap = 'round';
+        ctx!.stroke();
+      }
+    }
+
+    let lines = createLines(w, h);
+    drawLines(lines);
 
     const handleResize = () => {
       w = window.innerWidth;
       h = window.innerHeight;
       canvas.width = w;
       canvas.height = h;
+      lines = createLines(w, h);
+      drawLines(lines);
     };
     window.addEventListener('resize', handleResize);
 
-    // Generate scattered pixels — concentrated on right side + top area
-    const COUNT = Math.floor((w * h) / 2800); // density scales with viewport
-    const pixels: Pixel[] = [];
-
-    function createPixel(): Pixel {
-      // Bias toward right 60% and top 70% of screen
-      const biasRight = Math.random() < 0.65;
-      const biasTop = Math.random() < 0.6;
-      return {
-        x: biasRight ? w * 0.4 + Math.random() * w * 0.6 : Math.random() * w,
-        y: biasTop ? Math.random() * h * 0.7 : Math.random() * h,
-        size: Math.random() < 0.3 ? Math.random() * 4 + 3 : Math.random() * 3 + 1,
-        opacity: Math.random() * 0.15 + 0.03,
-        vx: (Math.random() - 0.5) * 0.08,
-        vy: (Math.random() - 0.5) * 0.06,
-        life: 0,
-        maxLife: Math.random() * 600 + 400,
-      };
-    }
-
-    for (let i = 0; i < COUNT; i++) {
-      const p = createPixel();
-      p.life = Math.random() * p.maxLife; // stagger start
-      pixels.push(p);
-    }
-
-    function draw() {
-      ctx!.clearRect(0, 0, w, h);
-
-      for (let i = 0; i < pixels.length; i++) {
-        const p = pixels[i];
-
-        // Fade in/out based on life cycle
-        const lifeRatio = p.life / p.maxLife;
-        let alpha = p.opacity;
-        if (lifeRatio < 0.1) alpha *= lifeRatio / 0.1;
-        else if (lifeRatio > 0.9) alpha *= (1 - lifeRatio) / 0.1;
-
-        ctx!.fillStyle = `rgba(160, 160, 160, ${alpha})`;
-        ctx!.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
-
-        if (!prefersReduced) {
-          p.x += p.vx;
-          p.y += p.vy;
-        }
-        p.life += 1;
-
-        // Recycle pixel when life expires
-        if (p.life >= p.maxLife) {
-          const np = createPixel();
-          np.life = 0;
-          pixels[i] = np;
-        }
-      }
-
-      animRef.current = requestAnimationFrame(draw);
-    }
-
-    // Static render for reduced motion
-    if (prefersReduced) {
-      draw();
-    } else {
-      animRef.current = requestAnimationFrame(draw);
-    }
-
     return () => {
-      cancelAnimationFrame(animRef.current);
       window.removeEventListener('resize', handleResize);
     };
   }, []);

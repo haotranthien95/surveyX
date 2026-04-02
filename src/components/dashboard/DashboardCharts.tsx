@@ -1,35 +1,36 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { ChartProvider } from '@/components/charts/ChartProvider';
 import { MetricCard } from './MetricCard';
-// import { LeaderboardGrid } from './LeaderboardGrid';
 import { ChartSection } from './ChartSection';
-import { DimensionBarChart } from '@/components/charts/DimensionBarChart';
-import { ResponseDonutChart } from '@/components/charts/ResponseDonutChart';
-import { ENPSGauge } from '@/components/charts/ENPSGauge';
 import { HorizontalBarRanking } from '@/components/charts/HorizontalBarRanking';
-import { RelationshipRadar } from '@/components/charts/RelationshipRadar';
-import { LeadershipComparisonChart } from '@/components/charts/LeadershipComparisonChart';
-import { TenureJourneyChart } from '@/components/charts/TenureJourneyChart';
-import { TenureInsightsChart } from '@/components/charts/TenureInsightsChart';
-import { ENPSDetailChart } from '@/components/charts/ENPSDetailChart';
-import { PillarHeatmap } from './PillarHeatmap';
-import { SentimentAnalysisCards } from './SentimentAnalysisCards';
-import { EarlyWarningAlerts } from './EarlyWarningAlerts';
-import { DepartmentBreakdownChart } from './DepartmentBreakdownChart';
 
 import { useTranslations } from 'next-intl';
 import { FadeIn } from '@/components/motion/FadeIn';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-// DIMENSION_COLORS no longer used directly — performance zones handle coloring
 import { ErrorBoundary } from './ErrorBoundary';
-import { EESTrendChart } from '@/components/charts/EESTrendChart';
-import { SubPillarBreakdownChart } from '@/components/charts/SubPillarBreakdownChart';
-import { LeadershipConfidenceChart } from '@/components/charts/LeadershipConfidenceChart';
-import { RelationshipStatementsChart } from '@/components/charts/RelationshipStatementsChart';
-import { InternalBenchmarkChart } from '@/components/charts/InternalBenchmarkChart';
-import { IndustryBenchmarkChart } from '@/components/charts/IndustryBenchmarkChart';
 import type { DashboardData, MultiSurveyData } from '@/lib/types/analytics';
+
+// Lazy-load heavy chart components — only loaded when their tab is active
+const DimensionBarChart = dynamic(() => import('@/components/charts/DimensionBarChart').then(m => ({ default: m.DimensionBarChart })), { ssr: false });
+const ResponseDonutChart = dynamic(() => import('@/components/charts/ResponseDonutChart').then(m => ({ default: m.ResponseDonutChart })), { ssr: false });
+const ENPSGauge = dynamic(() => import('@/components/charts/ENPSGauge').then(m => ({ default: m.ENPSGauge })), { ssr: false });
+const RelationshipRadar = dynamic(() => import('@/components/charts/RelationshipRadar').then(m => ({ default: m.RelationshipRadar })), { ssr: false });
+const LeadershipComparisonChart = dynamic(() => import('@/components/charts/LeadershipComparisonChart').then(m => ({ default: m.LeadershipComparisonChart })), { ssr: false });
+const TenureJourneyChart = dynamic(() => import('@/components/charts/TenureJourneyChart').then(m => ({ default: m.TenureJourneyChart })), { ssr: false });
+const TenureInsightsChart = dynamic(() => import('@/components/charts/TenureInsightsChart').then(m => ({ default: m.TenureInsightsChart })), { ssr: false });
+const ENPSDetailChart = dynamic(() => import('@/components/charts/ENPSDetailChart').then(m => ({ default: m.ENPSDetailChart })), { ssr: false });
+const EESTrendChart = dynamic(() => import('@/components/charts/EESTrendChart').then(m => ({ default: m.EESTrendChart })), { ssr: false });
+const SubPillarBreakdownChart = dynamic(() => import('@/components/charts/SubPillarBreakdownChart').then(m => ({ default: m.SubPillarBreakdownChart })), { ssr: false });
+const LeadershipConfidenceChart = dynamic(() => import('@/components/charts/LeadershipConfidenceChart').then(m => ({ default: m.LeadershipConfidenceChart })), { ssr: false });
+const RelationshipStatementsChart = dynamic(() => import('@/components/charts/RelationshipStatementsChart').then(m => ({ default: m.RelationshipStatementsChart })), { ssr: false });
+const InternalBenchmarkChart = dynamic(() => import('@/components/charts/InternalBenchmarkChart').then(m => ({ default: m.InternalBenchmarkChart })), { ssr: false });
+const IndustryBenchmarkChart = dynamic(() => import('@/components/charts/IndustryBenchmarkChart').then(m => ({ default: m.IndustryBenchmarkChart })), { ssr: false });
+const PillarHeatmap = dynamic(() => import('./PillarHeatmap').then(m => ({ default: m.PillarHeatmap })), { ssr: false });
+const SentimentAnalysisCards = dynamic(() => import('./SentimentAnalysisCards').then(m => ({ default: m.SentimentAnalysisCards })), { ssr: false });
+const EarlyWarningAlerts = dynamic(() => import('./EarlyWarningAlerts').then(m => ({ default: m.EarlyWarningAlerts })), { ssr: false });
+const DepartmentBreakdownChart = dynamic(() => import('./DepartmentBreakdownChart').then(m => ({ default: m.DepartmentBreakdownChart })), { ssr: false });
 
 interface DashboardChartsProps {
   data: DashboardData;

@@ -18,7 +18,9 @@ export async function GET() {
   }
 
   const surveys = await listSurveys();
-  return Response.json({ surveys });
+  return Response.json({ surveys }, {
+    headers: { 'Cache-Control': 'private, max-age=60, s-maxage=0' },
+  });
 }
 
 export async function POST(request: Request) {
