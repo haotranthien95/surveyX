@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { Upload, FileText, X, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,7 +22,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import type { Survey, Token } from '@/lib/types';
@@ -68,7 +66,6 @@ function parseCsvEmails(csvText: string): { valid: string[]; invalid: string[] }
   const lines = csvText.split(/\r?\n/);
   if (lines.length === 0) return { valid: [], invalid: [] };
 
-  // Find the email column index from header row
   const headers = lines[0].split(',').map((h) => h.trim().toLowerCase().replace(/^"|"$/g, ''));
   const emailIdx = headers.findIndex(
     (h) => h === 'email' || h === 'email_address' || h === 'e-mail',
@@ -270,168 +267,186 @@ export function EmailDistributionForm({ survey, surveys, priorInvitations }: Pro
   const failCount = results.filter((r) => r.status === 'failed').length;
   const failedAddresses = results.filter((r) => r.status === 'failed').map((r) => r.email);
 
+  // History metrics
+  const submittedCount = priorInvitations.filter((i) => i.status === 'submitted').length;
+  const pendingCount = priorInvitations.filter((i) => i.status === 'pending').length;
+  const responseRate = priorInvitations.length > 0
+    ? Math.round((submittedCount / priorInvitations.length) * 100)
+    : 0;
+
   return (
     <div>
-      {/* Page heading */}
-      <h1 className="text-xl font-semibold text-gray-900 mb-6">{t('inviteTitle')}</h1>
+      {/* Page heading — editorial */}
+      <h1 className="text-2xl font-light text-gray-900 tracking-tight mb-8">{t('inviteTitle')}</h1>
 
       {/* Send form */}
       {phase === 'form' && (
-        <Card>
-          <CardContent className="pt-6 space-y-5">
-            {/* Survey select */}
-            <div className="space-y-1.5">
-              <Label>{t('inviteSurveyLabel')}</Label>
-              <Select
-                value={selectedSurveyId}
-                onValueChange={(v) => {
-                  if (v) setSelectedSurveyId(v);
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <span className="truncate">
-                    {surveys.find((s) => s.id === selectedSurveyId)?.name ||
-                      t('inviteSurveyPlaceholder')}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  {surveys.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="mb-10">
+          {/* Survey select */}
+          <div className="space-y-1.5 mb-6">
+            <Label className="text-[11px] uppercase tracking-widest text-gray-500">{t('inviteSurveyLabel')}</Label>
+            <Select
+              value={selectedSurveyId}
+              onValueChange={(v) => {
+                if (v) setSelectedSurveyId(v);
+              }}
+            >
+              <SelectTrigger className="w-full max-w-md">
+                <span className="truncate">
+                  {surveys.find((s) => s.id === selectedSurveyId)?.name ||
+                    t('inviteSurveyPlaceholder')}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                {surveys.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-            {/* Tabs: Manual / CSV */}
-            <Tabs defaultValue="manual">
-              <TabsList>
-                <TabsTrigger value="manual">{t('tabManual')}</TabsTrigger>
-                <TabsTrigger value="csv">{t('tabCsv')}</TabsTrigger>
-              </TabsList>
+          {/* Tabs: Manual / CSV */}
+          <Tabs defaultValue="manual">
+            <TabsList>
+              <TabsTrigger value="manual">{t('tabManual')}</TabsTrigger>
+              <TabsTrigger value="csv">{t('tabCsv')}</TabsTrigger>
+            </TabsList>
 
-              {/* Manual entry tab */}
-              <TabsContent value="manual">
-                <div className="space-y-3 pt-3">
-                  <div className="space-y-1.5">
-                    <Label>{t('inviteEmailsLabel')}</Label>
-                    <Textarea
-                      value={emailsRaw}
-                      onChange={(e) => setEmailsRaw(e.target.value)}
-                      placeholder={t('inviteEmailsPlaceholder')}
-                      rows={6}
-                      className="font-mono text-sm"
-                    />
-                    {emailsRaw.trim() ? (
-                      <p className="text-xs text-muted-foreground">
-                        {t('inviteEmailsCount', { count: parsedEmails.length })}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">{t('inviteEmailsNone')}</p>
-                    )}
-                    {invalidEmails.length > 0 && (
-                      <p className="text-xs text-red-600">
-                        {t('inviteEmailsInvalid', { list: invalidEmails.join(', ') })}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Button onClick={handleSubmit} disabled={!canSend}>
-                      {t('inviteSendButton')}
-                    </Button>
-                    <Button variant="ghost" onClick={handleClear} type="button">
-                      {t('inviteClearButton')}
-                    </Button>
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* CSV upload tab */}
-              <TabsContent value="csv">
-                <div className="space-y-3 pt-3">
-                  <div className="space-y-1.5">
-                    <Label>{t('csvUploadLabel')}</Label>
-                    <p className="text-xs text-muted-foreground">{t('csvUploadHint')}</p>
-                  </div>
-
-                  {/* Dropzone */}
-                  <div
-                    className={`relative flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 transition-colors cursor-pointer ${
-                      isDragOver
-                        ? 'border-primary bg-primary/5'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                    onClick={() => fileInputRef.current?.click()}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setIsDragOver(true);
-                    }}
-                    onDragLeave={() => setIsDragOver(false)}
-                    onDrop={handleDrop}
-                  >
-                    <Upload className="h-8 w-8 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">{t('csvDropzone')}</p>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".csv"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                  </div>
-
-                  {/* CSV file selected indicator */}
-                  {csvFileName && (
-                    <div className="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span className="flex-1 truncate">{csvFileName}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {t('csvPreviewValid', { count: csvEmails.length })}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCsvClear();
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
+            {/* Manual entry tab */}
+            <TabsContent value="manual">
+              <div className="space-y-4 pt-4">
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] uppercase tracking-widest text-gray-500">{t('inviteEmailsLabel')}</Label>
+                  <Textarea
+                    value={emailsRaw}
+                    onChange={(e) => setEmailsRaw(e.target.value)}
+                    placeholder={t('inviteEmailsPlaceholder')}
+                    rows={6}
+                    className="font-mono text-sm max-w-2xl"
+                  />
+                  {emailsRaw.trim() ? (
+                    <p className="text-xs text-gray-500">
+                      {t('inviteEmailsCount', { count: parsedEmails.length })}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-gray-500">{t('inviteEmailsNone')}</p>
                   )}
+                  {invalidEmails.length > 0 && (
+                    <p className="text-xs text-red-600">
+                      {t('inviteEmailsInvalid', { list: invalidEmails.join(', ') })}
+                    </p>
+                  )}
+                </div>
 
-                  {/* CSV error */}
-                  {csvError && <p className="text-xs text-red-600">{csvError}</p>}
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!canSend}
+                    className="inline-flex items-center justify-center gap-2 rounded-md bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                  >
+                    {t('inviteSendButton')}
+                  </button>
+                  <button
+                    onClick={handleClear}
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-md border border-gray-200 px-4 py-2.5 text-sm text-gray-600 hover:text-gray-900 hover:border-gray-300 transition-colors"
+                  >
+                    {t('inviteClearButton')}
+                  </button>
+                </div>
+              </div>
+            </TabsContent>
 
-                  {/* Actions */}
-                  <div className="flex gap-3">
-                    {csvEmails.length > 0 && (
-                      <Button onClick={() => setShowPreview(true)}>
-                        {t('inviteSendButton')}
-                      </Button>
-                    )}
-                    <Button variant="ghost" onClick={handleCsvClear} type="button">
-                      {t('inviteClearButton')}
-                    </Button>
+            {/* CSV upload tab */}
+            <TabsContent value="csv">
+              <div className="space-y-4 pt-4">
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] uppercase tracking-widest text-gray-500">{t('csvUploadLabel')}</Label>
+                  <p className="text-xs text-gray-500">{t('csvUploadHint')}</p>
+                </div>
+
+                {/* Dropzone */}
+                <div
+                  className={`relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-10 transition-colors cursor-pointer max-w-2xl ${
+                    isDragOver
+                      ? 'border-gray-900 bg-gray-50'
+                      : 'border-gray-200 hover:border-gray-400'
+                  }`}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragOver(true);
+                  }}
+                  onDragLeave={() => setIsDragOver(false)}
+                  onDrop={handleDrop}
+                >
+                  <Upload className="h-6 w-6 text-gray-400" />
+                  <p className="text-sm text-gray-500">{t('csvDropzone')}</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* CSV file selected indicator */}
+                {csvFileName && (
+                  <div className="flex items-center gap-2 rounded-md bg-gray-50 border border-gray-100 px-3 py-2 text-sm max-w-2xl">
+                    <FileText className="h-4 w-4 text-gray-500" />
+                    <span className="flex-1 truncate text-gray-900">{csvFileName}</span>
+                    <span className="text-xs text-gray-500">
+                      {t('csvPreviewValid', { count: csvEmails.length })}
+                    </span>
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      onClick={downloadCsvTemplate}
-                      className="ml-auto"
+                      className="h-6 w-6 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCsvClear();
+                      }}
                     >
-                      <Download className="h-3.5 w-3.5 mr-1.5" />
-                      {t('csvDownloadTemplate')}
+                      <X className="h-3 w-3" />
                     </Button>
                   </div>
+                )}
+
+                {/* CSV error */}
+                {csvError && <p className="text-xs text-red-600">{csvError}</p>}
+
+                {/* Actions */}
+                <div className="flex gap-3 items-center">
+                  {csvEmails.length > 0 && (
+                    <button
+                      onClick={() => setShowPreview(true)}
+                      className="inline-flex items-center justify-center gap-2 rounded-md bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+                    >
+                      {t('inviteSendButton')}
+                    </button>
+                  )}
+                  <button
+                    onClick={handleCsvClear}
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-md border border-gray-200 px-4 py-2.5 text-sm text-gray-600 hover:text-gray-900 hover:border-gray-300 transition-colors"
+                  >
+                    {t('inviteClearButton')}
+                  </button>
+                  <button
+                    onClick={downloadCsvTemplate}
+                    className="ml-auto inline-flex items-center justify-center gap-1.5 rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-600 hover:text-gray-900 hover:border-gray-300 transition-colors"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    {t('csvDownloadTemplate')}
+                  </button>
                 </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       )}
 
       {/* CSV Preview Dialog */}
@@ -490,108 +505,97 @@ export function EmailDistributionForm({ survey, surveys, priorInvitations }: Pro
 
       {/* Sending progress */}
       {phase === 'sending' && (
-        <Card>
-          <CardContent className="pt-6 space-y-4">
-            <p className="text-sm text-gray-700">{t('inviteProgress', { sent, total })}</p>
-            <Progress value={total > 0 ? (sent / total) * 100 : 0} />
-          </CardContent>
-        </Card>
+        <div className="mb-10 max-w-md space-y-4">
+          <p className="text-sm text-gray-700">{t('inviteProgress', { sent, total })}</p>
+          <Progress value={total > 0 ? (sent / total) * 100 : 0} />
+        </div>
       )}
 
       {/* Done summary */}
       {phase === 'done' && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">
-              {t('inviteSuccessHeading', { total: successCount })}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {failCount > 0 && (
-              <>
-                <p className="text-sm text-red-600">
-                  {t('invitePartialFailure', { failed: failCount, total: results.length })}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {t('inviteFailedAddresses', { list: failedAddresses.join(', ') })}
-                </p>
-              </>
-            )}
-            <Button onClick={handleSendAnother} variant="default">
-              {t('inviteAnotherBatch')}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Invitation History Table — always visible */}
-      <div className="mt-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-gray-900">{t('inviteHistoryHeading')}</h2>
-          {priorInvitations.length > 0 && (
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span>
-                Total: <strong className="text-foreground">{priorInvitations.length}</strong>
-              </span>
-              <span>
-                Submitted:{' '}
-                <strong className="text-green-600">
-                  {priorInvitations.filter((i) => i.status === 'submitted').length}
-                </strong>
-              </span>
-              <span>
-                Pending:{' '}
-                <strong className="text-amber-600">
-                  {priorInvitations.filter((i) => i.status === 'pending').length}
-                </strong>
-              </span>
-              <span>
-                Rate:{' '}
-                <strong className="text-foreground">
-                  {priorInvitations.length > 0
-                    ? Math.round(
-                        (priorInvitations.filter((i) => i.status === 'submitted').length /
-                          priorInvitations.length) *
-                          100,
-                      )
-                    : 0}
-                  %
-                </strong>
-              </span>
+        <div className="mb-10 max-w-lg space-y-4">
+          <h2 className="text-lg font-light text-gray-900 tracking-tight">
+            {t('inviteSuccessHeading', { total: successCount })}
+          </h2>
+          {failCount > 0 && (
+            <div className="space-y-1">
+              <p className="text-sm text-red-600">
+                {t('invitePartialFailure', { failed: failCount, total: results.length })}
+              </p>
+              <p className="text-xs text-gray-500 font-mono">
+                {t('inviteFailedAddresses', { list: failedAddresses.join(', ') })}
+              </p>
             </div>
           )}
+          <button
+            onClick={handleSendAnother}
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+          >
+            {t('inviteAnotherBatch')}
+          </button>
         </div>
+      )}
 
+      {/* Divider */}
+      <div className="divider-dot mb-10" />
+
+      {/* Invitation History — hero metrics + table */}
+      <div>
+        <h2 className="text-[11px] font-medium text-gray-500 uppercase tracking-widest mb-6">{t('inviteHistoryHeading')}</h2>
+
+        {/* Hero stats */}
+        {priorInvitations.length > 0 && (
+          <div className="flex flex-wrap gap-x-12 gap-y-4 mb-8">
+            <div>
+              <div className="text-3xl font-light tracking-tight tabular-nums text-gray-900">{priorInvitations.length}</div>
+              <div className="text-[11px] uppercase tracking-widest text-gray-500 mt-1">Total Sent</div>
+            </div>
+            <div>
+              <div className="text-3xl font-light tracking-tight tabular-nums text-gray-900">{submittedCount}</div>
+              <div className="text-[11px] uppercase tracking-widest text-gray-500 mt-1">Submitted</div>
+            </div>
+            <div>
+              <div className="text-3xl font-light tracking-tight tabular-nums text-gray-400">{pendingCount}</div>
+              <div className="text-[11px] uppercase tracking-widest text-gray-500 mt-1">Pending</div>
+            </div>
+            <div>
+              <div className="text-3xl font-light tracking-tight tabular-nums text-gray-900">{responseRate}%</div>
+              <div className="text-[11px] uppercase tracking-widest text-gray-500 mt-1">Response Rate</div>
+            </div>
+          </div>
+        )}
+
+        {/* Table */}
         {priorInvitations.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('inviteHistoryEmpty')}</p>
+          <p className="text-sm text-gray-500">{t('inviteHistoryEmpty')}</p>
         ) : (
-          <div className="overflow-x-auto border rounded-lg">
+          <div className="overflow-x-auto border border-gray-100 rounded-lg">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     {t('inviteHistoryEmail')}
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
+                  <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     {t('inviteHistoryStatus')}
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">
+                  <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     {t('inviteHistorySentAt')}
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {priorInvitations.map((inv) => (
-                  <tr key={inv.token} className="border-b last:border-0 hover:bg-gray-50">
-                    <td className="px-3 py-2 font-mono text-xs">{inv.email}</td>
-                    <td className="px-3 py-2">
+                {priorInvitations.map((inv, i) => (
+                  <tr key={inv.token} className={`${i !== priorInvitations.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-900">{inv.email}</td>
+                    <td className="px-4 py-3">
                       {inv.status === 'submitted' ? (
-                        <Badge variant="default">{t('statusSubmitted')}</Badge>
+                        <Badge className="bg-green-50 text-green-700 border-0 text-[11px]">Submitted</Badge>
                       ) : (
-                        <Badge variant="secondary">{t('statusPending')}</Badge>
+                        <Badge variant="secondary" className="text-[11px]">Pending</Badge>
                       )}
                     </td>
-                    <td className="px-3 py-2 text-muted-foreground text-xs">
+                    <td className="px-4 py-3 text-gray-500 text-xs tabular-nums">
                       {new Date(inv.createdAt).toLocaleString()}
                     </td>
                   </tr>

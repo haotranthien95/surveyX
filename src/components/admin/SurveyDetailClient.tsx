@@ -11,7 +11,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { ManualQuestionEditor } from '@/components/admin/ManualQuestionEditor';
-import { SurveyMetrics } from '@/components/admin/SurveyMetrics';
 import { useUpdateSurvey, useDeleteSurvey } from '@/hooks/use-surveys';
 import type { Survey, Question } from '@/lib/types';
 
@@ -25,9 +24,9 @@ interface SurveyDetailClientProps {
 }
 
 function StatusBadge({ status }: { status: Survey['status'] }) {
-  if (status === 'active') return <Badge className="bg-green-50 text-green-700 border-0">Active</Badge>;
-  if (status === 'closed') return <Badge variant="outline">Closed</Badge>;
-  return <Badge variant="secondary">Draft</Badge>;
+  if (status === 'active') return <Badge className="bg-green-50 text-green-700 border-0 text-xs px-2.5 py-0.5">Active</Badge>;
+  if (status === 'closed') return <Badge variant="outline" className="text-xs px-2.5 py-0.5">Closed</Badge>;
+  return <Badge variant="secondary" className="text-xs px-2.5 py-0.5">Draft</Badge>;
 }
 
 function TypeBadge({ type }: { type: Question['type'] }) {
@@ -74,24 +73,29 @@ export function SurveyDetailClient({ survey: initialSurvey, questions: initialQu
 
   if (editingQuestions) {
     return (
-      <div className="p-6 max-w-3xl">
+      <div className="p-8 max-w-3xl">
         <button
           type="button"
           onClick={() => setEditingQuestions(false)}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6"
         >
           ← Back to survey
         </button>
-        <h2 className="text-base font-medium text-foreground mb-4">Edit Questions</h2>
+        <h2 className="text-xl font-light text-foreground tracking-tight mb-6">Edit Questions</h2>
         <ManualQuestionEditor surveyId={survey.id} initialQuestions={initialQuestions} />
       </div>
     );
   }
 
+  // Hero stats for bold display
+  const pendingCount = Math.max(0, tokenCount - responseCount);
+  const responseRate = tokenCount > 0 ? Math.round((responseCount / tokenCount) * 100) : 0;
+
   return (
-    <div className="p-6">
-      {/* Survey switcher dropdown + New survey button */}
-      <div className="mb-6 flex items-center gap-2">
+    <div className="p-8">
+
+      {/* Survey switcher + New */}
+      <div className="mb-10 flex items-center gap-2">
         <Select value={survey.id} onValueChange={(id) => { if (id) router.push(`/${locale}/admin/surveys/${id}`); }}>
           <SelectTrigger className="w-72">
             <span className="truncate">{surveys.find(s => s.id === survey.id)?.name || survey.name}</span>
@@ -109,14 +113,14 @@ export function SurveyDetailClient({ survey: initialSurvey, questions: initialQu
         </Link>
       </div>
 
-      {/* Header — editable */}
-      <div className="mt-4 mb-6">
+      {/* Header — editorial style */}
+      <div className="mb-10">
         {editingHeader ? (
           <div className="space-y-3 max-w-lg">
             <Input
               value={editName}
               onChange={e => setEditName(e.target.value)}
-              className="text-lg font-medium"
+              className="text-2xl font-light tracking-tight"
               autoFocus
             />
             <Textarea
@@ -142,8 +146,9 @@ export function SurveyDetailClient({ survey: initialSurvey, questions: initialQu
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-lg font-medium text-foreground">{survey.name}</h1>
+            {/* Title row */}
+            <div className="flex items-center gap-3 mb-3">
+              <h1 className="text-2xl font-light text-foreground tracking-tight">{survey.name}</h1>
 
               {/* Status badge with dropdown */}
               <div className="relative">
@@ -173,7 +178,7 @@ export function SurveyDetailClient({ survey: initialSurvey, questions: initialQu
                 )}
               </div>
 
-              {/* Edit name button */}
+              {/* Edit name */}
               <button
                 type="button"
                 onClick={() => setEditingHeader(true)}
@@ -182,90 +187,117 @@ export function SurveyDetailClient({ survey: initialSurvey, questions: initialQu
               >
                 <Pencil className="w-3.5 h-3.5" />
               </button>
+
+              {/* Delete */}
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
+                className="p-1 rounded text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                aria-label="Delete survey"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
             </div>
 
             {survey.description && (
-              <p className="text-sm text-muted-foreground">{survey.description}</p>
+              <p className="text-sm text-gray-500 mb-4 max-w-xl">{survey.description}</p>
             )}
-            <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-              <span>{t('questionCount', { count: initialQuestions.length })}</span>
-              <span>{t('responseCount', { count: responseCount })}</span>
-              <span>{new Date(survey.createdAt).toLocaleDateString()}</span>
-            </div>
           </>
         )}
       </div>
 
-      {/* Actions */}
-      <div className="flex flex-wrap gap-2 mb-8">
+      {/* Hero metrics — large editorial numbers */}
+      <div className="mb-10">
+        <div className="flex flex-wrap gap-x-12 gap-y-6">
+          <div>
+            <div className="text-4xl font-light tracking-tight tabular-nums text-gray-900">{initialQuestions.length}</div>
+            <div className="text-[11px] uppercase tracking-widest text-gray-500 mt-1">Questions</div>
+          </div>
+          <div>
+            <div className="text-4xl font-light tracking-tight tabular-nums text-gray-900">{responseCount}</div>
+            <div className="text-[11px] uppercase tracking-widest text-gray-500 mt-1">Responses</div>
+          </div>
+          {tokenCount > 0 && (
+            <div>
+              <div className="text-4xl font-light tracking-tight tabular-nums text-gray-900">{responseRate}%</div>
+              <div className="text-[11px] uppercase tracking-widest text-gray-500 mt-1">Response Rate</div>
+            </div>
+          )}
+          {tokenCount > 0 && (
+            <div>
+              <div className="text-4xl font-light tracking-tight tabular-nums text-gray-400">{pendingCount}</div>
+              <div className="text-[11px] uppercase tracking-widest text-gray-500 mt-1">Pending</div>
+            </div>
+          )}
+          <div className="self-end mb-0.5">
+            <div className="text-xs text-gray-400 tabular-nums">{new Date(survey.createdAt).toLocaleDateString()}</div>
+            <div className="text-[11px] uppercase tracking-widest text-gray-500 mt-0.5">Created</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="divider-dot mb-10" />
+
+      {/* Actions — primary elevated, secondary recessed */}
+      <div className="flex flex-wrap items-center gap-3 mb-10">
+        <Link
+          href={`../surveys/${survey.id}/invite`}
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+        >
+          <Send className="w-4 h-4" /> {t('sendInvitations')}
+        </Link>
         <Link
           href={`/${locale}/survey/${previewToken}`}
           target="_blank"
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted min-h-[40px]"
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-gray-200 px-4 py-2.5 text-sm text-gray-600 hover:text-foreground hover:border-gray-300 transition-colors"
         >
           <Eye className="w-4 h-4" /> {t('previewSurvey')}
-        </Link>
-        <Link
-          href={`../surveys/${survey.id}/invite`}
-          className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 min-h-[40px]"
-        >
-          <Send className="w-4 h-4" /> {t('sendInvitations')}
         </Link>
         <button
           type="button"
           onClick={() => setEditingQuestions(true)}
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted min-h-[40px]"
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-gray-200 px-4 py-2.5 text-sm text-gray-600 hover:text-foreground hover:border-gray-300 transition-colors"
         >
           <Pencil className="w-4 h-4" /> Edit Questions
         </button>
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={deleteMutation.isPending}
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 min-h-[40px]"
-        >
-          <Trash2 className="w-4 h-4" /> {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-        </button>
       </div>
-
-      {/* Metrics — pie charts */}
-      {initialQuestions.length > 0 && (
-        <SurveyMetrics
-          questions={initialQuestions}
-          responseCount={responseCount}
-          tokenCount={tokenCount}
-        />
-      )}
 
       {/* Questions table */}
       {initialQuestions.length > 0 ? (
-        <div className="overflow-x-auto border border-border rounded-lg">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/30 border-b border-border">
-              <tr>
-                <th scope="col" className="px-3 py-2 text-left font-medium text-muted-foreground text-xs">{t('questionId')}</th>
-                <th scope="col" className="px-3 py-2 text-left font-medium text-muted-foreground text-xs">{t('questionEnglish')}</th>
-                <th scope="col" className="px-3 py-2 text-left font-medium text-muted-foreground text-xs">{t('questionBurmese')}</th>
-                <th scope="col" className="px-3 py-2 text-left font-medium text-muted-foreground text-xs">{t('questionType')}</th>
-                <th scope="col" className="px-3 py-2 text-left font-medium text-muted-foreground text-xs">{t('questionSection')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {initialQuestions.map((q) => (
-                <tr key={q.id} className="border-b border-border last:border-0 hover:bg-muted/20">
-                  <td className="px-3 py-2 font-mono text-xs text-muted-foreground">{q.id}</td>
-                  <td className="px-3 py-2 max-w-[240px] text-foreground">{q.en}</td>
-                  <td className="px-3 py-2 max-w-[240px] text-foreground font-myanmar">{q.my}</td>
-                  <td className="px-3 py-2"><TypeBadge type={q.type} /></td>
-                  <td className="px-3 py-2 text-muted-foreground text-xs">{q.dimension ?? ''}</td>
+        <div>
+          <h2 className="text-xs font-medium text-gray-500 uppercase tracking-widest mb-4">
+            All Questions ({initialQuestions.length})
+          </h2>
+          <div className="overflow-x-auto border border-gray-100 rounded-lg">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th scope="col" className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">{t('questionId')}</th>
+                  <th scope="col" className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">{t('questionEnglish')}</th>
+                  <th scope="col" className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">{t('questionBurmese')}</th>
+                  <th scope="col" className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">{t('questionType')}</th>
+                  <th scope="col" className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">{t('questionSection')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {initialQuestions.map((q, i) => (
+                  <tr key={q.id} className={`${i !== initialQuestions.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+                    <td className="px-4 py-3 font-mono text-[11px] text-gray-500 tabular-nums">{q.id}</td>
+                    <td className="px-4 py-3 max-w-[260px] text-foreground leading-relaxed">{q.en}</td>
+                    <td className="px-4 py-3 max-w-[260px] text-foreground font-myanmar leading-relaxed">{q.my}</td>
+                    <td className="px-4 py-3"><TypeBadge type={q.type} /></td>
+                    <td className="px-4 py-3 text-gray-500 text-xs capitalize">{q.dimension ?? ''}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
-        <div className="py-10 text-center">
-          <p className="text-sm text-muted-foreground mb-3">No questions added yet.</p>
+        <div className="py-16 text-center">
+          <p className="text-sm text-gray-400 mb-4">No questions added yet.</p>
           <Button variant="outline" size="sm" onClick={() => setEditingQuestions(true)}>
             <Pencil className="w-4 h-4 mr-1" /> Add Questions
           </Button>
