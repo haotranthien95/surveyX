@@ -13,9 +13,10 @@ interface TocSection {
 interface TableOfContentsProps {
   sections: TocSection[];
   totalProgress: number;
+  progressLabel?: string;
 }
 
-export function TableOfContents({ sections, totalProgress }: TableOfContentsProps) {
+export function TableOfContents({ sections, totalProgress, progressLabel }: TableOfContentsProps) {
   const [activeSection, setActiveSection] = useState<string | null>(
     sections[0]?.id ?? null
   );
@@ -59,7 +60,7 @@ export function TableOfContents({ sections, totalProgress }: TableOfContentsProp
       {/* Progress bar */}
       <div className="mb-5">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wider">Progress</span>
+          <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wider">{progressLabel ?? 'Progress'}</span>
           <span className="text-[11px] text-muted-foreground tabular-nums">{totalProgress}%</span>
         </div>
         <div className="h-1 bg-border rounded-full overflow-hidden">

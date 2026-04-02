@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Users,
   ShieldCheck,
@@ -65,15 +66,15 @@ const SECTION_ORDER: Array<'camaraderie' | 'credibility' | 'fairness' | 'pride' 
   'demographic',
 ];
 
-const SECTION_TITLE_KEYS: Record<string, string> = {
-  camaraderie: 'Camaraderie',
-  credibility: 'Credibility',
-  fairness: 'Fairness',
-  pride: 'Pride',
-  respect: 'Respect',
-  uncategorized: 'Other',
-  open_ended: 'Open-Ended Questions',
-  demographic: 'About You',
+const SECTION_I18N_KEYS: Record<string, string> = {
+  camaraderie: 'sectionCamaraderie',
+  credibility: 'sectionCredibility',
+  fairness: 'sectionFairness',
+  pride: 'sectionPride',
+  respect: 'sectionRespect',
+  uncategorized: 'sectionOther',
+  open_ended: 'sectionOpenEnded',
+  demographic: 'sectionDemographics',
 };
 
 const SECTION_ICONS: Record<string, React.ReactNode> = {
@@ -88,6 +89,7 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
 };
 
 export function SurveyForm({ survey, questions, tokenRow, locale, translations }: SurveyFormProps) {
+  const tl = useTranslations('survey');
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Set<string>>(new Set());
   const [hasSubmitAttempted, setHasSubmitAttempted] = useState(false);
@@ -193,7 +195,7 @@ export function SurveyForm({ survey, questions, tokenRow, locale, translations }
   // Sections data for TOC and mobile bar
   const tocSections = groupedSections.map(({ sectionKey, questions: sqs }) => ({
     id: sectionKey,
-    title: SECTION_TITLE_KEYS[sectionKey] ?? sectionKey,
+    title: SECTION_I18N_KEYS[sectionKey] ? tl(SECTION_I18N_KEYS[sectionKey]) : sectionKey,
     answeredCount: getSectionAnsweredCount(sectionKey, sqs),
     totalCount: sectionKey === 'open_ended' ? 0 : sqs.length,
   }));
@@ -214,6 +216,7 @@ export function SurveyForm({ survey, questions, tokenRow, locale, translations }
             <TableOfContents
               sections={tocSections}
               totalProgress={totalProgress}
+              progressLabel={tl('progressTitle')}
             />
           </div>
 
@@ -227,24 +230,6 @@ export function SurveyForm({ survey, questions, tokenRow, locale, translations }
                   {survey.description && (
                     <p className="text-sm text-muted-foreground mt-1">{survey.description}</p>
                   )}
-                </div>
-
-                {/* Language switcher — pill style */}
-                <div className="flex items-center bg-muted/40 rounded-full p-0.5 flex-shrink-0">
-                  {(['en', 'my'] as const).map(lang => (
-                    <button
-                      key={lang}
-                      type="button"
-                      onClick={() => setDisplayLocale(lang)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 ${
-                        displayLocale === lang
-                          ? 'bg-foreground text-background shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {'en' === lang ? 'EN' : 'MM'}
-                    </button>
-                  ))}
                 </div>
               </div>
 
@@ -261,7 +246,7 @@ export function SurveyForm({ survey, questions, tokenRow, locale, translations }
               <SectionCard
                 key={sectionKey}
                 sectionId={sectionKey}
-                title={SECTION_TITLE_KEYS[sectionKey] ?? sectionKey}
+                title={SECTION_I18N_KEYS[sectionKey] ? tl(SECTION_I18N_KEYS[sectionKey]) : sectionKey}
                 icon={SECTION_ICONS[sectionKey]}
                 answeredCount={getSectionAnsweredCount(sectionKey, sqs)}
                 totalCount={sectionKey === 'open_ended' ? 0 : sqs.length}
