@@ -48,10 +48,10 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
         {/* Hero metrics — with benchmarks and performance zones */}
         <FadeIn>
           <div className="flex flex-wrap gap-x-8 gap-y-6 md:gap-x-12">
-            <MetricCard label={t('metricEmployeeEngagement')} value={data.eesScore} benchmark={80} trend={{ value: data.eesTrend, label: t('metricVsLastYear') }} testId="metric-employee-engagement" />
-            <MetricCard label={t('metricGreatPlaceToWork')} value={data.gptwScore} benchmark={85} testId="metric-great-place-to-work" />
-            <MetricCard label={t('metricResponseRate')} value={data.responseRate} showZone={false} testId="metric-response-rate" />
-            <MetricCard label={t('metricResponses')} value={data.totalResponses} suffix="" showZone={false} testId="metric-total-responses" />
+            <MetricCard label={t('metricEmployeeEngagement')} value={data.eesScore} benchmark={80} trend={{ value: data.eesTrend, label: t('metricVsLastYear') }} />
+            <MetricCard label={t('metricGreatPlaceToWork')} value={data.gptwScore} benchmark={85} />
+            <MetricCard label={t('metricResponseRate')} value={data.responseRate} showZone={false} />
+            <MetricCard label={t('metricResponses')} value={data.totalResponses} suffix="" showZone={false} />
           </div>
         </FadeIn>
 
@@ -77,7 +77,6 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                   <ChartSection
                     title={t('sectionEESTrend')}
                     description={t('sectionEESTrendDesc')}
-                    testId="chart-ees-trend"
                   >
                     <EESTrendChart data={multiSurveyData} />
                   </ChartSection>
@@ -88,14 +87,14 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 <div className="lg:col-span-3">
                   <ErrorBoundary>
-                    <ChartSection title={t('sectionPillarPerformance')} description={t('sectionPillarPerformanceDesc')} testId="chart-pillar-performance">
+                    <ChartSection title={t('sectionPillarPerformance')} description={t('sectionPillarPerformanceDesc')}>
                       <DimensionBarChart data={data.dimensions} />
                     </ChartSection>
                   </ErrorBoundary>
                 </div>
                 <div className="lg:col-span-2">
                   <ErrorBoundary>
-                    <ChartSection title={t('sectionOverallSentiment')} description={t('sectionOverallSentimentDesc')} testId="chart-overall-sentiment">
+                    <ChartSection title={t('sectionOverallSentiment')} description={t('sectionOverallSentimentDesc')}>
                       <ResponseDonutChart {...data.sentiment} />
                     </ChartSection>
                   </ErrorBoundary>
@@ -107,7 +106,6 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                 <ChartSection
                   title={t('sectionIndustryBenchmark')}
                   description={t('sectionIndustryBenchmarkDesc')}
-                  testId="chart-industry-benchmark"
                 >
                   <IndustryBenchmarkChart data={data.industryBenchmark} />
                 </ChartSection>
@@ -121,7 +119,6 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                       title={t('sectionRelationshipAxes')}
                       description={t('sectionRelationshipAxesDesc')}
                       height={300}
-                      testId="chart-relationship-axes"
                     >
                       <RelationshipRadar data={data.relationshipScores} />
                     </ChartSection>
@@ -129,7 +126,6 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                 </div>
                 <div className="lg:col-span-3">
                   <ErrorBoundary>
-                    <div data-test-id="chart-statement-rankings">
                     <Tabs defaultValue="strengths">
                       <div className="flex items-center justify-between mb-4">
                         <div>
@@ -148,14 +144,13 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                         <HorizontalBarRanking items={data.opportunities} mode="opportunities" />
                       </TabsContent>
                     </Tabs>
-                    </div>
                   </ErrorBoundary>
                 </div>
               </div>
 
               {/* Department Breakdown */}
               <ErrorBoundary>
-                <ChartSection title={t('sectionDepartmentBreakdown')} description={t('sectionDepartmentBreakdownDesc')} testId="chart-department-breakdown">
+                <ChartSection title={t('sectionDepartmentBreakdown')} description={t('sectionDepartmentBreakdownDesc')}>
                   <DepartmentBreakdownChart data={data.departmentBreakdown} />
                 </ChartSection>
               </ErrorBoundary>
@@ -166,7 +161,7 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
 
               {/* Pillar Heatmap — full width */}
               <ErrorBoundary>
-                <div data-test-id="chart-pillar-heatmap">
+                <div>
                   <div className="mb-3">
                     <h3 className="text-sm font-medium text-foreground">{t('sectionPillarHeatmap')}</h3>
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -182,7 +177,6 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                 <ChartSection
                   title={t('sectionSubPillarDeepDive')}
                   description={t('sectionSubPillarDeepDiveDesc')}
-                  testId="chart-sub-pillar-breakdown"
                 >
                   <SubPillarBreakdownChart data={data.subPillarScores} />
                 </ChartSection>
@@ -193,7 +187,6 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                 <ChartSection
                   title={t('sectionRelationshipStatements')}
                   description={t('sectionRelationshipStatementsDesc')}
-                  testId="chart-relationship-statements"
                 >
                   <RelationshipStatementsChart data={data.relationshipStatements} />
                 </ChartSection>
@@ -207,7 +200,6 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                       title={t('sectionLeadershipPerspective')}
                       description={t('sectionLeadershipPerspectiveDesc')}
                       height={300}
-                      testId="chart-leadership-comparison"
                     >
                       <LeadershipComparisonChart data={data.leadershipComparison} />
                     </ChartSection>
@@ -219,7 +211,6 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                       title={t('sectionConfidenceInLeadership')}
                       description={t('sectionConfidenceInLeadershipDesc')}
                       height={300}
-                      testId="chart-leadership-confidence"
                     >
                       <LeadershipConfidenceChart data={data.leadershipConfidence} />
                     </ChartSection>
@@ -235,7 +226,6 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                       title={t('sectionEnpsDetail')}
                       description={t('sectionEnpsDetailDesc')}
                       height={340}
-                      testId="chart-enps-detail"
                     >
                       <ENPSDetailChart data={data.enpsDetail} />
                     </ChartSection>
@@ -245,7 +235,7 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                 {/* Legacy ENPS reference */}
                 <div className="lg:col-span-2">
                   <ErrorBoundary>
-                    <ChartSection title={t('sectionEnpsLegacy')} description={t('sectionEnpsLegacyDesc')} testId="chart-enps-legacy">
+                    <ChartSection title={t('sectionEnpsLegacy')} description={t('sectionEnpsLegacyDesc')}>
                       <ENPSGauge {...data.enps} />
                     </ChartSection>
                   </ErrorBoundary>
@@ -262,7 +252,6 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                   <ChartSection
                     title={t('sectionInternalBenchmark')}
                     description={t('sectionInternalBenchmarkDesc')}
-                    testId="chart-internal-benchmark"
                   >
                     <InternalBenchmarkChart data={multiSurveyData} />
                   </ChartSection>
@@ -275,7 +264,6 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                   title={t('sectionTenureJourney')}
                   description={t('sectionTenureJourneyDesc')}
                   height={320}
-                  testId="chart-tenure-journey"
                 >
                   <TenureJourneyChart data={data.tenureJourney} />
                 </ChartSection>
@@ -289,7 +277,6 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                       title={t('sectionTenureInsights')}
                       description={t('sectionTenureInsightsDesc')}
                       height={280}
-                      testId="chart-tenure-insights"
                     >
                       <TenureInsightsChart data={data.tenureInsights} />
                     </ChartSection>
@@ -297,7 +284,7 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
                 </div>
                 <div className="lg:col-span-2">
                   <ErrorBoundary>
-                    <div data-test-id="chart-early-warning">
+                    <div>
                       <div className="mb-3">
                         <h3 className="text-sm font-medium text-foreground">{t('sectionEarlyWarning')}</h3>
                         <p className="text-xs text-muted-foreground mt-0.5">
@@ -314,7 +301,7 @@ export function DashboardCharts({ data, multiSurvey }: DashboardChartsProps) {
             {/* ── QUALITATIVE TAB ───────────────────────────────────── */}
             <TabsContent value="qualitative" className="mt-0 space-y-8">
               <ErrorBoundary>
-                <div data-test-id="chart-sentiment-analysis">
+                <div>
                   <div className="mb-4">
                     <h3 className="text-sm font-medium text-foreground">{t('sectionQualitative')}</h3>
                     <p className="text-xs text-muted-foreground mt-0.5">
