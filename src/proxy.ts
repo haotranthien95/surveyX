@@ -31,7 +31,13 @@ export async function proxy(request: NextRequest) {
       if (!session.token) throw new Error('No token in session');
 
       const secret = new TextEncoder().encode(process.env.ADMIN_JWT_SECRET!);
-      await jwtVerify(session.token, secret);
+      const { payload } = await jwtVerify(session.token, secret);
+
+      // Block managers from settings pages
+      if (payload.role === 'manager' && pathname.match(/\/admin\/settings/)) {
+        const locale = pathname.startsWith('/my') ? 'my' : 'en';
+        return NextResponse.redirect(new URL(`/${locale}/admin`, request.url));
+      }
     } catch {
       const locale = pathname.startsWith('/my') ? 'my' : 'en';
       return NextResponse.redirect(new URL(`/${locale}/login`, request.url));

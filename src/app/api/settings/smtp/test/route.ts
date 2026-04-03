@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { sessionOptions } from '@/lib/auth';
 import type { SessionData } from '@/lib/auth';
+import { isAdmin } from '@/lib/auth';
 import { createTransporter } from '@/lib/services/email.service';
 import type { SmtpSettings } from '@/lib/types';
 
@@ -14,7 +15,7 @@ async function isAuthenticated(): Promise<boolean> {
 }
 
 export async function POST(request: Request) {
-  if (!(await isAuthenticated())) {
+  if (!(await isAuthenticated()) || !(await isAdmin())) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -16,12 +16,14 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { UserRole } from '@/lib/auth';
 
 interface AdminSidebarProps {
   latestActiveSurveyId?: string;
+  role?: UserRole;
 }
 
-export function AdminSidebar({ latestActiveSurveyId }: AdminSidebarProps) {
+export function AdminSidebar({ latestActiveSurveyId, role = 'admin' }: AdminSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
@@ -119,16 +121,18 @@ export function AdminSidebar({ latestActiveSurveyId }: AdminSidebarProps) {
           <LogOut className={cn('flex-shrink-0', collapsed ? 'h-[18px] w-[18px]' : 'h-4 w-4')} />
           {!collapsed && <span>{t('signOut')}</span>}
         </button>
-        <Link
-          href={`/${locale}/admin/settings`}
-          className={cn(
-            'flex items-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors',
-            collapsed ? 'justify-center p-2.5' : 'p-2'
-          )}
-          aria-label={t('settings')}
-        >
-          <Settings className={cn('flex-shrink-0', collapsed ? 'h-[18px] w-[18px]' : 'h-4 w-4')} />
-        </Link>
+        {role === 'admin' && (
+          <Link
+            href={`/${locale}/admin/settings`}
+            className={cn(
+              'flex items-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors',
+              collapsed ? 'justify-center p-2.5' : 'p-2'
+            )}
+            aria-label={t('settings')}
+          >
+            <Settings className={cn('flex-shrink-0', collapsed ? 'h-[18px] w-[18px]' : 'h-4 w-4')} />
+          </Link>
+        )}
       </div>
     </div>
   );

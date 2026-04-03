@@ -9,18 +9,31 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const { username, password } = body as { username?: string; password?: string };
 
+  // Determine role from credentials
+  let role: 'admin' | 'manager' | null = null;
   if (
-    !username ||
-    !password ||
-    username !== process.env.ADMIN_USERNAME ||
-    password !== process.env.ADMIN_PASSWORD
+    username &&
+    password &&
+    username === process.env.ADMIN_USERNAME &&
+    password === process.env.ADMIN_PASSWORD
   ) {
+    role = 'admin';
+  } else if (
+    username &&
+    password &&
+    username === process.env.MANAGER_USERNAME &&
+    password === process.env.MANAGER_PASSWORD
+  ) {
+    role = 'manager';
+  }
+
+  if (!role) {
     // Generic error — no credential enumeration
     return Response.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
   const secret = new TextEncoder().encode(process.env.ADMIN_JWT_SECRET!);
-  const token = await new SignJWT({ role: 'admin' })
+  const token = await new SignJWT({ role })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('24h')
